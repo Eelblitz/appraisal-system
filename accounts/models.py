@@ -1,10 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from organisations.models import Organisation  # ← NEW IMPORT
 
-
-# This extends Django's built-in User model
-# Django already gives us: username, email, password, first_name, last_name
-# We add everything else our system needs here
 
 class UserProfile(models.Model):
 
@@ -16,12 +13,29 @@ class UserProfile(models.Model):
         ('super_admin', 'Super Admin'),
     ]
 
-    # One profile per user — if user is deleted, profile is deleted too
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='profile'
+    )
 
-    role = models.CharField(max_length=30, choices=ROLE_CHOICES, default='employee')
+    # ← NEW FIELD
+    # null=True temporarily during migration
+    # We will make it required after setting up default data
+    organisation = models.ForeignKey(
+        Organisation,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='members',
+        help_text='Which organisation does this user belong to?'
+    )
 
-    # Personal info matching Part 1 of the appraisal form
+    role = models.CharField(
+        max_length=30,
+        choices=ROLE_CHOICES,
+        default='employee'
+    )
     date_of_birth = models.DateField(null=True, blank=True)
     local_government = models.CharField(max_length=100, blank=True)
     department = models.CharField(max_length=100, blank=True)
@@ -31,10 +45,11 @@ class UserProfile(models.Model):
     present_substantive_grade = models.CharField(max_length=100, blank=True)
     date_appointed_to_grade = models.DateField(null=True, blank=True)
     phone_number = models.CharField(max_length=20, blank=True)
-    profile_photo = models.ImageField(upload_to='profiles/', null=True, blank=True)
-
-    # Who is this employee's reporting officer?
-    # A reporting officer can have many employees under them
+    profile_photo = models.ImageField(
+        upload_to='profiles/',
+        null=True,
+        blank=True
+    )
     reporting_officer = models.ForeignKey(
         'self',
         on_delete=models.SET_NULL,
@@ -42,8 +57,6 @@ class UserProfile(models.Model):
         blank=True,
         related_name='subordinates'
     )
-
-    # Who is the countersigning officer for this employee?
     countersigning_officer = models.ForeignKey(
         'self',
         on_delete=models.SET_NULL,
@@ -51,7 +64,6 @@ class UserProfile(models.Model):
         blank=True,
         related_name='countersigned_employees'
     )
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

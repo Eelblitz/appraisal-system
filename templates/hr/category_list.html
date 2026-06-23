@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}Categories{% endblock %}
+{% block page_title %}Appraisal Categories{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h4>Appraisal Categories</h4>
+        <p>Group your staff into categories for appraisal purposes</p>
+    </div>
+    <a href="{% url 'hr:category_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>New Category
+    </a>
+</div>
+
+<div class="content-card">
+    {% if categories %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for category in categories %}
+                <tr>
+                    <td class="fw-semibold">{{ category.name }}</td>
+                    <td class="text-muted">{{ category.description|default:"—" }}</td>
+                    <td>
+                        {% if category.is_active %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'hr:category_edit' category.pk %}"
+                           class="btn btn-sm btn-outline-primary me-1">
+                            <i class="bi bi-pencil"></i> Edit
+                        </a>
+                        <a href="{% url 'hr:category_toggle' category.pk %}"
+                           class="btn btn-sm {% if category.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}">
+                            {% if category.is_active %}
+                                <i class="bi bi-pause-circle"></i> Deactivate
+                            {% else %}
+                                <i class="bi bi-play-circle"></i> Activate
+                            {% endif %}
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-tags fs-1"></i>
+        <p class="mt-2">No categories yet.</p>
+        <a href="{% url 'hr:category_create' %}" class="btn btn-primary">
+            Create First Category
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

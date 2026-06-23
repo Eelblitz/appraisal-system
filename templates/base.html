@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}Appraisal System{% endblock %}</title>
+
+    <!-- Bootstrap 5 CSS — loaded from CDN, no local install needed -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons — for sidebar and nav icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        /* ── Layout ─────────────────────────────────────────── */
+        body {
+            background-color: #f4f6f9;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        /* Sidebar stays fixed on the left, full height */
+        #sidebar {
+            width: 250px;
+            min-height: 100vh;
+            background-color: #1a3a5c;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+            transition: all 0.3s;
+        }
+
+        /* The main content area shifts right to make room for sidebar */
+        #main-content {
+            margin-left: 250px;
+            min-height: 100vh;
+        }
+
+        /* ── Sidebar Styles ─────────────────────────────────── */
+        .sidebar-brand {
+            background-color: #122840;
+            padding: 20px 15px;
+            text-align: center;
+        }
+        .sidebar-brand h6 {
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
+        .sidebar-brand small {
+            color: #a0b4c8;
+            font-size: 0.7rem;
+        }
+
+        .sidebar-nav {
+            padding: 15px 0;
+        }
+
+        /* Section label e.g. "MAIN MENU", "HR TOOLS" */
+        .nav-section-label {
+            color: #6a8caa;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 15px 20px 5px;
+        }
+
+        .nav-link-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            color: #c5d8e8;
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: background 0.2s;
+            border-left: 3px solid transparent;
+        }
+        .nav-link-item:hover {
+            background-color: #1e4976;
+            color: #ffffff;
+            border-left-color: #4a9fd4;
+        }
+        .nav-link-item.active {
+            background-color: #1e4976;
+            color: #ffffff;
+            border-left-color: #4a9fd4;
+            font-weight: 600;
+        }
+        .nav-link-item i {
+            font-size: 1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* ── Top Navbar ─────────────────────────────────────── */
+        #topnav {
+            background-color: #ffffff;
+            border-bottom: 1px solid #e0e6ed;
+            padding: 12px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 99;
+        }
+        .topnav-title {
+            font-weight: 600;
+            color: #1a3a5c;
+            font-size: 1rem;
+        }
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background-color: #1a3a5c;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        .user-name {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1a3a5c;
+        }
+        .user-role {
+            font-size: 0.72rem;
+            color: #7f8c8d;
+        }
+
+        /* ── Page Content ───────────────────────────────────── */
+        .page-content {
+            padding: 25px;
+        }
+        .page-header {
+            margin-bottom: 25px;
+        }
+        .page-header h4 {
+            font-weight: 700;
+            color: #1a3a5c;
+            margin: 0;
+        }
+        .page-header p {
+            color: #7f8c8d;
+            font-size: 0.875rem;
+            margin: 4px 0 0;
+        }
+
+        /* ── Cards ──────────────────────────────────────────── */
+        .content-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        /* ── Alerts ─────────────────────────────────────────── */
+        .alert {
+            border-radius: 8px;
+            font-size: 0.875rem;
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+<div id="sidebar">
+
+    <div class="sidebar-brand">
+        <h6>Performance Evaluation System</h6>
+    </div>
+
+    <nav class="sidebar-nav">
+
+        <div class="nav-section-label">Main Menu</div>
+
+        <a href="{% url 'core:dashboard' %}"
+           class="nav-link-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+            <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+
+        <a href="{% url 'accounts:profile' %}"
+           class="nav-link-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+            <i class="bi bi-person-circle"></i> My Profile
+        </a>
+
+        <div class="nav-section-label">Appraisal</div>
+
+        <a href="{% url 'appraisal:my_appraisals' %}"
+           class="nav-link-item {% if request.resolver_match.url_name == 'my_appraisals' %}active{% endif %}">
+            <i class="bi bi-file-earmark-text"></i> My Appraisals
+        </a>
+
+        {% if request.user.profile.role in 'reporting_officer,countersigning_officer,hr_admin,super_admin' %}
+        <a href="{% url 'appraisal:team_appraisals' %}"
+           class="nav-link-item {% if request.resolver_match.url_name == 'team_appraisals' %}active{% endif %}">
+            <i class="bi bi-people"></i> Team Appraisals
+        </a>
+        {% endif %}
+
+        {% if request.user.profile.role in 'hr_admin,super_admin' %}
+        <div class="nav-section-label">HR Tools</div>
+
+        <a href="{% url 'hr:cycle_list' %}"
+           class="nav-link-item {% if request.resolver_match.url_name == 'cycle_list' %}active{% endif %}">
+            <i class="bi bi-arrow-repeat"></i> Appraisal Cycles
+        </a>
+
+        <a href="{% url 'hr:category_list' %}"
+           class="nav-link-item {% if request.resolver_match.url_name == 'category_list' %}active{% endif %}">
+            <i class="bi bi-tags"></i> Categories
+        </a>
+
+        <a href="{% url 'hr:template_list' %}"
+           class="nav-link-item {% if request.resolver_match.url_name == 'template_list' %}active{% endif %}">
+            <i class="bi bi-layout-text-window"></i> Templates
+        </a>
+
+        <a href="{% url 'hr:aspect_list' %}"
+           class="nav-link-item {% if request.resolver_match.url_name == 'aspect_list' %}active{% endif %}">
+            <i class="bi bi-list-check"></i> Performance Aspects
+        </a>
+
+        <a href="{% url 'accounts:user_list' %}"
+           class="nav-link-item {% if request.resolver_match.url_name == 'user_list' %}active{% endif %}">
+            <i class="bi bi-people-fill"></i> Manage Users
+        </a>
+        {% endif %}
+
+        <div class="nav-section-label">Payments</div>
+
+        <a href="{% url 'payments:my_payments' %}"
+           class="nav-link-item {% if request.resolver_match.url_name == 'my_payments' %}active{% endif %}">
+            <i class="bi bi-credit-card"></i> My Payments
+        </a>
+
+        {% if request.user.profile.role in 'hr_admin,super_admin' %}
+        <a href="{% url 'payments:all_payments' %}"
+           class="nav-link-item {% if request.resolver_match.url_name == 'all_payments' %}active{% endif %}">
+            <i class="bi bi-cash-stack"></i> All Payments
+        </a>
+        {% endif %}
+
+    </nav>
+</div>
+
+
+<div id="main-content">
+
+    <div id="topnav">
+        <div class="topnav-title">
+            {% block page_title %}Dashboard{% endblock %}
+        </div>
+
+        <div class="user-badge">
+            <div class="user-avatar">
+                {{ request.user.first_name|first|upper }}
+            </div>
+            <div>
+                <div class="user-name">{{ request.user.get_full_name }}</div>
+                <div class="user-role">
+                    {{ request.user.profile.get_role_display }}
+                </div>
+            </div>
+
+            <form method="POST" action="{% url 'accounts:logout' %}" class="ms-3">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="page-content">
+
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            <i class="bi bi-info-circle me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+
+        {% block content %}
+        {% endblock %}
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+{% block extra_js %}{% endblock %}
+
+</body>
+</html>

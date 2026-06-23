@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Performance Aspects{% endblock %}
+{% block page_title %}Performance Aspects{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h4>Performance Aspects</h4>
+    <p>The 16 rated aspects. Edit descriptions to fit your organisation.</p>
+</div>
+
+<div class="content-card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th width="40">#</th>
+                    <th>Aspect</th>
+                    <th>Outstanding (A)</th>
+                    <th>Unsatisfactory (E)</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for aspect in aspects %}
+                <tr>
+                    <td class="text-muted">{{ aspect.order }}</td>
+                    <td class="fw-semibold">{{ aspect.label }}</td>
+                    <td class="text-success" style="font-size:0.82rem;">
+                        {{ aspect.outstanding_description }}
+                    </td>
+                    <td class="text-danger" style="font-size:0.82rem;">
+                        {{ aspect.unsatisfactory_description }}
+                    </td>
+                    <td>
+                        {% if aspect.is_applicable %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-secondary">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'hr:aspect_edit' aspect.pk %}"
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-pencil"></i> Edit
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}Appraisal Cycles{% endblock %}
+{% block page_title %}Appraisal Cycles{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h4>Appraisal Cycles</h4>
+        <p>Manage annual appraisal periods and download fees</p>
+    </div>
+    <a href="{% url 'hr:cycle_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>New Cycle
+    </a>
+</div>
+
+<div class="content-card">
+    {% if cycles %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Year</th>
+                    <th>Period</th>
+                    <th>Fee (₦)</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cycle in cycles %}
+                <tr>
+                    <td class="fw-semibold">{{ cycle.name }}</td>
+                    <td>{{ cycle.category.name }}</td>
+                    <td>{{ cycle.year }}</td>
+                    <td class="text-muted" style="font-size:0.82rem;">
+                        {{ cycle.period_from }} — {{ cycle.period_to }}
+                    </td>
+                    <td>₦{{ cycle.download_fee }}</td>
+                    <td>
+                        {% if cycle.status == 'draft' %}
+                            <span class="badge bg-secondary">Draft</span>
+                        {% elif cycle.status == 'active' %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-danger">Closed</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'hr:cycle_edit' cycle.pk %}"
+                           class="btn btn-sm btn-outline-primary me-1">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        {% if cycle.status != 'closed' %}
+                        <a href="{% url 'hr:cycle_status' cycle.pk %}"
+                           class="btn btn-sm {% if cycle.status == 'draft' %}btn-outline-success{% else %}btn-outline-danger{% endif %}">
+                            {% if cycle.status == 'draft' %}
+                                <i class="bi bi-play-circle"></i> Activate
+                            {% else %}
+                                <i class="bi bi-stop-circle"></i> Close
+                            {% endif %}
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-arrow-repeat fs-1"></i>
+        <p class="mt-2">No cycles created yet.</p>
+        <a href="{% url 'hr:cycle_create' %}" class="btn btn-primary">
+            Create First Cycle
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

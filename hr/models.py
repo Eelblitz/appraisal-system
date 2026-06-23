@@ -1,69 +1,92 @@
 from django.db import models
 from django.contrib.auth.models import User
+from organisations.models import Organisation
 
 
 class AppraisalCategory(models.Model):
     """
-    Examples: 'Teaching Staff', 'Admin Staff', 'Technical Staff'
-    HR creates these to group employees by type
+    Staff groupings within ONE organisation.
+    Ministry of Finance's "Admin Staff" is completely
+    separate from Ministry of Health's "Admin Staff"
+    even though they have the same name.
+    The organisation field makes them distinct.
     """
-    name = models.CharField(max_length=100, unique=True)
+    organisation = models.ForeignKey(
+        Organisation,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='categories'
+    )
+    name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.organisation})"
 
     class Meta:
         verbose_name = 'Appraisal Category'
         verbose_name_plural = 'Appraisal Categories'
+        # Same category name can exist in different organisations
+        # but NOT twice in the same organisation
+        unique_together = ['organisation', 'name']
 
 
 class AppraisalCycle(models.Model):
-    """
-    Examples: '2024 Annual Appraisal', '2025 Mid-Year Review'
-    HR creates one cycle per appraisal period
-    """
     STATUS_CHOICES = [
         ('draft', 'Draft'),
         ('active', 'Active'),
         ('closed', 'Closed'),
     ]
 
+    organisation = models.ForeignKey(
+        Organisation,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='cycles'
+    )
     name = models.CharField(max_length=200)
     category = models.ForeignKey(
         AppraisalCategory,
-        on_delete=models.PROTECT,  # Prevent deleting a category that has cycles
+        on_delete=models.PROTECT,
         related_name='cycles'
     )
     year = models.PositiveIntegerField()
     period_from = models.DateField()
     period_to = models.DateField()
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft')
-
-    # The token amount employees pay to download their PDF
-    # HR sets this per cycle as you requested
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default='draft'
+    )
     download_fee = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         default=0.00,
-        help_text='Amount in Naira employees pay to download their appraisal PDF'
+        help_text='Amount in Naira employees pay to download their PDF'
     )
-
-    # Deadlines for each part
     part1_deadline = models.DateField(null=True, blank=True)
     part2_deadline = models.DateField(null=True, blank=True)
     part3_deadline = models.DateField(null=True, blank=True)
     part4_deadline = models.DateField(null=True, blank=True)
-
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.name} ({self.year})"
+        return f"{self.name} ({self.organisation})"
 
     class Meta:
         verbose_name = 'Appraisal Cycle'
@@ -73,30 +96,32 @@ class AppraisalCycle(models.Model):
 
 class PerformanceAspect(models.Model):
     """
-    These are the 16 rated aspects from Part 2 of the GEN 79 form.
-    HR can modify the label and descriptions.
+    Performance aspects are PLATFORM-LEVEL by default.
+    The 16 GEN 79 aspects belong to no organisation —
+    they are seeded by the platform and available to all.
 
-    Examples:
-    - label: 'Foresight'
-    - outstanding_description: 'Anticipates problems and develops solution in advance'
-    - unsatisfactory_description: 'Grapples with problems after they arise'
+    However organisations can create their OWN custom aspects.
+    organisation = None means it is a platform default aspect.
+    organisation = Finance means it is Finance's custom aspect.
     """
+    organisation = models.ForeignKey(
+        Organisation,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='aspects',
+        help_text='Null means this is a platform default aspect available to all'
+    )
     label = models.CharField(max_length=100)
-    outstanding_description = models.TextField(
-        help_text='Description for rating A (Outstanding)'
+    outstanding_description = models.TextField()
+    unsatisfactory_description = models.TextField()
+    is_applicable = models.BooleanField(default=True)
+    order = models.PositiveIntegerField(default=0)
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True
     )
-    unsatisfactory_description = models.TextField(
-        help_text='Description for rating E (Unsatisfactory)'
-    )
-    is_applicable = models.BooleanField(
-        default=True,
-        help_text='Uncheck if this aspect does not apply to certain staff'
-    )
-    order = models.PositiveIntegerField(
-        default=0,
-        help_text='Controls the display order on the form'
-    )
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -109,15 +134,13 @@ class PerformanceAspect(models.Model):
 
 
 class AppraisalTemplate(models.Model):
-    """
-    A template ties a cycle to a set of performance aspects.
-    This way HR can have different questions for different cycles.
-
-    Example:
-    - Template: '2024 Admin Staff Appraisal'
-    - Cycle: '2024 Annual'
-    - Aspects: All 16 from GEN 79
-    """
+    organisation = models.ForeignKey(
+        Organisation,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='templates'
+    )
     name = models.CharField(max_length=200)
     cycle = models.ForeignKey(
         AppraisalCycle,
@@ -126,15 +149,19 @@ class AppraisalTemplate(models.Model):
     )
     aspects = models.ManyToManyField(
         PerformanceAspect,
-        through='TemplateAspect',  # We use a through model to control ordering per template
+        through='TemplateAspect',
         related_name='templates'
     )
     is_active = models.BooleanField(default=True)
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.name} - {self.cycle.name}"
+        return f"{self.name} — {self.cycle.name}"
 
     class Meta:
         verbose_name = 'Appraisal Template'
@@ -142,11 +169,6 @@ class AppraisalTemplate(models.Model):
 
 
 class TemplateAspect(models.Model):
-    """
-    This is the 'through' model between Template and PerformanceAspect.
-    It lets HR control the ORDER of aspects per template,
-    and whether a specific aspect is required in that template.
-    """
     template = models.ForeignKey(AppraisalTemplate, on_delete=models.CASCADE)
     aspect = models.ForeignKey(PerformanceAspect, on_delete=models.CASCADE)
     order = models.PositiveIntegerField(default=0)
@@ -154,4 +176,4 @@ class TemplateAspect(models.Model):
 
     class Meta:
         ordering = ['order']
-        unique_together = ['template', 'aspect']  # No duplicate aspects per template
+        unique_together = ['template', 'aspect']
