@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-7">
+        <div class="content-card">
+
+            <!-- Organisation badge at the top -->
+            <div class="alert alert-info mb-4">
+                <i class="bi bi-building me-2"></i>
+                Creating HR Admin for:
+                <strong>{{ organisation.name }}</strong>
+            </div>
+
+            <h6 class="fw-bold mb-4">HR Admin Account Details</h6>
+
+            <form method="POST">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <div class="d-flex gap-2 mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-person-check me-1"></i>
+                        {{ button_label }}
+                    </button>
+                    <a href="{% url 'organisations:organisation_list' %}"
+                       class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Skip for Now
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-md-5">
+        <div class="content-card">
+            <h6 class="fw-bold mb-3">
+                <i class="bi bi-info-circle text-primary me-2"></i>
+                Why Create an HR Admin?
+            </h6>
+            <p class="text-muted" style="font-size:0.85rem;">
+                This is the <strong>bootstrapping step.</strong>
+                The organisation has no users yet, so you must
+                create their first admin account.
+            </p>
+            <p class="text-muted" style="font-size:0.85rem;">
+                Once this HR Admin logs in, they can create
+                all other staff accounts themselves.
+            </p>
+            <p class="text-muted" style="font-size:0.85rem;">
+                Share these credentials securely with the
+                organisation's HR department.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

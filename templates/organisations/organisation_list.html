@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% block title %}Organisations — Platform Admin{% endblock %}
+{% block page_title %}Platform Administration{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h4>Organisations</h4>
+        <p>All ministries and MDAs using the platform</p>
+    </div>
+    <a href="{% url 'organisations:organisation_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>Onboard New Organisation
+    </a>
+</div>
+
+<!-- Platform Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="content-card text-center">
+            <i class="bi bi-building fs-2 text-primary"></i>
+            <h3 class="mt-2 fw-bold text-primary">{{ total_orgs }}</h3>
+            <p class="text-muted mb-0">Total Organisations</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="content-card text-center">
+            <i class="bi bi-check-circle fs-2 text-success"></i>
+            <h3 class="mt-2 fw-bold text-success">{{ active_orgs }}</h3>
+            <p class="text-muted mb-0">Active</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="content-card text-center">
+            <i class="bi bi-pause-circle fs-2 text-warning"></i>
+            <h3 class="mt-2 fw-bold text-warning">
+                {{ total_orgs|add:active_orgs|add:"-"|add:active_orgs }}
+            </h3>
+            <p class="text-muted mb-0">Inactive</p>
+        </div>
+    </div>
+</div>
+
+<div class="content-card">
+    {% if organisations %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Organisation</th>
+                    <th>Acronym</th>
+                    <th>Email</th>
+                    <th>Platform %</th>
+                    <th>Status</th>
+                    <th>Joined</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for org in organisations %}
+                <tr>
+                    <td class="fw-semibold">{{ org.name }}</td>
+                    <td>
+                        <span class="badge bg-secondary">
+                            {{ org.acronym|default:"—" }}
+                        </span>
+                    </td>
+                    <td class="text-muted">{{ org.email|default:"—" }}</td>
+                    <td>
+                        <span class="badge bg-info text-dark">
+                            {{ org.subscription_percentage }}%
+                        </span>
+                    </td>
+                    <td>
+                        {% if org.is_active %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-danger">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-muted" style="font-size:0.82rem;">
+                        {{ org.created_at|date:"d M Y" }}
+                    </td>
+                    <td>
+                        <a href="{% url 'organisations:organisation_edit' org.pk %}"
+                           class="btn btn-sm btn-outline-primary me-1">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="{% url 'organisations:create_org_admin' org.pk %}"
+                           class="btn btn-sm btn-outline-secondary me-1"
+                           title="Create HR Admin">
+                            <i class="bi bi-person-plus"></i>
+                        </a>
+                        <a href="{% url 'organisations:organisation_toggle' org.pk %}"
+                           class="btn btn-sm {% if org.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}">
+                            {% if org.is_active %}
+                                <i class="bi bi-pause-circle"></i>
+                            {% else %}
+                                <i class="bi bi-play-circle"></i>
+                            {% endif %}
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-building fs-1"></i>
+        <p class="mt-2">No organisations onboarded yet.</p>
+        <a href="{% url 'organisations:organisation_create' %}"
+           class="btn btn-primary">
+            Onboard First Organisation
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

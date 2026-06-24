@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }} — Appraisal System{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+
+<div class="row">
+
+    <!-- ── Left Column: The Form ─────────────────── -->
+    <div class="col-md-7">
+        <div class="content-card">
+            <h6 class="fw-bold mb-4">{{ title }}</h6>
+
+            <!--
+                enctype="multipart/form-data" is needed because
+                this form has a logo file upload field.
+                Without it, the uploaded file never reaches Django.
+            -->
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!--
+                    {{ form|crispy }} renders all fields with
+                    Bootstrap 5 styling.
+                    The form's helper has form_tag = False so
+                    crispy does not generate its own <form> tag
+                    and conflict with ours above.
+                -->
+                {{ form|crispy }}
+
+                <div class="d-flex gap-2 mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>
+                        {{ button_label }}
+                    </button>
+                    <a href="{% url 'organisations:organisation_list' %}"
+                       class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ── Right Column: Guide ───────────────────── -->
+    <div class="col-md-5">
+        <div class="content-card">
+            <h6 class="fw-bold mb-3">
+                <i class="bi bi-info-circle text-primary me-2"></i>
+                Platform Guide
+            </h6>
+
+            <p class="text-muted" style="font-size:0.85rem;">
+                <strong>Subscription Percentage</strong> is your
+                platform's cut from every employee PDF download
+                in this organisation.
+            </p>
+
+            <div class="p-3 rounded mb-3"
+                 style="background:#f0f9ff; font-size:0.82rem;">
+                <div class="fw-semibold mb-2">Example:</div>
+                <div>Employee pays: <strong>₦2,000</strong></div>
+                <div>Platform at 10%: <strong class="text-danger">₦200</strong></div>
+                <div>Organisation keeps: <strong class="text-success">₦1,800</strong></div>
+            </div>
+
+            <p class="text-muted" style="font-size:0.85rem;">
+                <strong>Logo</strong> appears on the header of every
+                appraisal PDF generated for this organisation.
+            </p>
+
+            <hr>
+
+            <p class="text-muted" style="font-size:0.85rem;">
+                <i class="bi bi-arrow-right-circle me-1 text-primary"></i>
+                After creating the organisation, you will be taken
+                to create their first HR Admin account.
+            </p>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

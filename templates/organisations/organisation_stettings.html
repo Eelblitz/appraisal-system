@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Organisation Settings — {{ organisation.name }}{% endblock %}
+{% block page_title %}Organisation Settings{% endblock %}
+
+{% block content %}
+
+<div class="row">
+
+    <!-- ── Left Column: Edit Form ─────────────────────── -->
+    <div class="col-md-7">
+        <div class="content-card">
+
+            <!-- 
+                Organisation identity header.
+                Shows logo if uploaded, otherwise shows first letter
+                of org name as an avatar — same pattern as the user
+                avatar in the top navbar.
+            -->
+            <div class="d-flex align-items-center gap-3 mb-4 pb-3"
+                 style="border-bottom: 1px solid #eee;">
+
+                {% if organisation.logo %}
+                    <img src="{{ organisation.logo.url }}"
+                         height="50"
+                         style="border-radius: 8px; object-fit: contain;"
+                         alt="{{ organisation.name }} Logo">
+                {% else %}
+                    <div class="user-avatar"
+                         style="width:50px; height:50px; font-size:1.2rem;">
+                        {{ organisation.name|first|upper }}
+                    </div>
+                {% endif %}
+
+                <div>
+                    <h6 class="mb-0 fw-bold">{{ organisation.name }}</h6>
+                    <small class="text-muted">
+                        {{ organisation.acronym|default:"No acronym set" }}
+                    </small>
+                </div>
+            </div>
+
+            <h6 class="fw-bold mb-4">Update Organisation Details</h6>
+
+            <!--
+                enctype="multipart/form-data" is REQUIRED when a form
+                uploads files (like the logo). Without it, the file
+                never reaches Django — only text fields are submitted.
+
+                Why? Because standard forms send data as text only.
+                multipart/form-data tells the browser to package
+                files as binary data alongside the text fields.
+            -->
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!--
+                    {{ form|crispy }} renders all form fields
+                    with Bootstrap 5 styling automatically.
+                    The form's helper must have form_tag = False
+                    (set in the view's form class) so crispy does
+                    not generate its own <form> tag and conflict
+                    with this one.
+                -->
+                {{ form|crispy }}
+
+                <div class="d-flex gap-2 mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Save Changes
+                    </button>
+                    <a href="{% url 'core:dashboard' %}"
+                       class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Cancel
+                    </a>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- ── Right Column: Subscription Info ───────────── -->
+    <div class="col-md-5">
+
+        <!-- Subscription Rate Card -->
+        <div class="content-card mb-3">
+            <h6 class="fw-bold mb-3">
+                <i class="bi bi-pie-chart-fill text-primary me-2"></i>
+                Platform Subscription Rate
+            </h6>
+            <p class="text-muted" style="font-size:0.85rem;">
+                Your current platform revenue share rate:
+            </p>
+
+            <!--
+                subscription_percentage is set by YOU (the platform
+                super admin) when you onboard this organisation.
+                The organisation cannot change this themselves.
+                It controls how much of each employee's PDF download
+                fee goes to the platform.
+            -->
+            <div class="d-flex align-items-center gap-2 my-3">
+                <h2 class="fw-bold text-primary mb-0">
+                    {{ organisation.subscription_percentage }}%
+                </h2>
+                <span class="text-muted" style="font-size:0.85rem;">
+                    platform fee per download
+                </span>
+            </div>
+
+            <!--
+                Show the revenue split clearly so HR Admin
+                understands exactly how their fee is divided.
+
+                Example: download_fee = ₦2,000, percentage = 10%
+                Platform gets: ₦200
+                Organisation keeps: ₦1,800
+            -->
+            {% if example_fee %}
+            <div class="p-3 rounded"
+                 style="background:#f8f9fa; font-size:0.82rem;">
+                <div class="fw-semibold mb-2 text-muted">
+                    Revenue split example (based on your current cycle fee):
+                </div>
+                <div class="d-flex justify-content-between mb-1">
+                    <span>Employee pays:</span>
+                    <span class="fw-semibold">₦{{ example_fee }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-1 text-danger">
+                    <span>Platform takes ({{ organisation.subscription_percentage }}%):</span>
+                    <span class="fw-semibold">
+                        ₦{{ organisation.subscription_percentage|floatformat:0 }}
+                    </span>
+                </div>
+                <div class="d-flex justify-content-between text-success"
+                     style="border-top:1px solid #dee2e6; padding-top:6px;">
+                    <span>Your organisation keeps:</span>
+                    <span class="fw-semibold">₦{{ org_earning_example }}</span>
+                </div>
+            </div>
+            {% endif %}
+
+            <hr>
+            <p class="text-muted" style="font-size:0.82rem;">
+                <i class="bi bi-info-circle me-1"></i>
+                This rate is set by the platform administrator.
+                To negotiate a different rate, contact platform support.
+            </p>
+        </div>
+
+        <!-- Organisation Stats Card -->
+        <div class="content-card">
+            <h6 class="fw-bold mb-3">
+                <i class="bi bi-bar-chart-fill text-success me-2"></i>
+                Organisation Summary
+            </h6>
+            <div class="row text-center g-2">
+                <div class="col-6">
+                    <div class="p-2 rounded" style="background:#f0f9ff;">
+                        <div class="fw-bold text-primary fs-5">
+                            {{ total_employees|default:"0" }}
+                        </div>
+                        <div class="text-muted" style="font-size:0.75rem;">
+                            Total Employees
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="p-2 rounded" style="background:#f0fff4;">
+                        <div class="fw-bold text-success fs-5">
+                            {{ active_cycles|default:"0" }}
+                        </div>
+                        <div class="text-muted" style="font-size:0.75rem;">
+                            Active Cycles
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="p-2 rounded" style="background:#fffbf0;">
+                        <div class="fw-bold text-warning fs-5">
+                            {{ total_appraisals|default:"0" }}
+                        </div>
+                        <div class="text-muted" style="font-size:0.75rem;">
+                            Total Appraisals
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="p-2 rounded" style="background:#fff0f0;">
+                        <div class="fw-bold text-danger fs-5">
+                            ₦{{ total_revenue|default:"0" }}
+                        </div>
+                        <div class="text-muted" style="font-size:0.75rem;">
+                            Total Revenue
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

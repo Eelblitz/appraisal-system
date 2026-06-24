@@ -1,6 +1,7 @@
 from django import forms
+from django.db.models import Q
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Row, Column, Submit, Field
+from crispy_forms.layout import Layout, Row, Column
 from .models import (
     AppraisalCategory, AppraisalCycle,
     PerformanceAspect, AppraisalTemplate
@@ -15,7 +16,7 @@ class AppraisalCategoryForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
-        self.helper.form_tag = False  # Template handles the <form> tag
+        self.helper.form_tag = False
         self.helper.layout = Layout(
             'name',
             'description',
@@ -24,6 +25,20 @@ class AppraisalCategoryForm(forms.ModelForm):
 
 
 class AppraisalCycleForm(forms.ModelForm):
+    """
+    Why does this form accept organisation?
+
+    The category dropdown must only show categories belonging
+    to the current user's organisation.
+
+    Without passing organisation, the dropdown would show
+    ALL categories from ALL organisations — a data leak.
+
+    We pass organisation through kwargs, pop it before
+    calling super().__init__() because ModelForm does not
+    know what to do with a custom kwarg.
+    """
+
     class Meta:
         model = AppraisalCycle
         fields = [
@@ -43,12 +58,27 @@ class AppraisalCycleForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        # Pop organisation from kwargs BEFORE calling super()
+        # If we don't pop it, super().__init__() will crash
+        # because ModelForm doesn't expect 'organisation'
+        organisation = kwargs.pop('organisation', None)
         super().__init__(*args, **kwargs)
-        self.fields['category'].queryset = AppraisalCategory.objects.filter(
-            is_active=True
-        )
+
+        # Filter category dropdown to this organisation only
+        if organisation:
+            self.fields['category'].queryset = (
+                AppraisalCategory.objects.filter(
+                    organisation=organisation,
+                    is_active=True
+                )
+            )
+        else:
+            self.fields['category'].queryset = (
+                AppraisalCategory.objects.none()
+            )
+
         self.helper = FormHelper()
-        self.helper.form_tag = False  # Template handles the <form> tag
+        self.helper.form_tag = False
         self.helper.layout = Layout(
             Row(
                 Column('name', css_class='col-md-8'),
@@ -97,7 +127,7 @@ class PerformanceAspectForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
-        self.helper.form_tag = False  # Template handles the <form> tag
+        self.helper.form_tag = False
         self.helper.layout = Layout(
             Row(
                 Column('label', css_class='col-md-8'),
@@ -110,13 +140,17 @@ class PerformanceAspectForm(forms.ModelForm):
 
 
 class AppraisalTemplateForm(forms.ModelForm):
+    """
+    Same pattern as AppraisalCycleForm.
+    We pass organisation to filter:
+    1. The cycle dropdown — only this org's cycles
+    2. The aspects — platform defaults + org custom aspects
+    """
     aspects = forms.ModelMultipleChoiceField(
-        queryset=PerformanceAspect.objects.filter(
-            is_applicable=True
-        ).order_by('order'),
+        queryset=PerformanceAspect.objects.none(),
         widget=forms.CheckboxSelectMultiple,
         required=True,
-        help_text='Select the performance aspects to include in this template'
+        help_text='Select performance aspects for this template'
     )
 
     class Meta:
@@ -124,15 +158,35 @@ class AppraisalTemplateForm(forms.ModelForm):
         fields = ['name', 'cycle', 'aspects', 'is_active']
 
     def __init__(self, *args, **kwargs):
+        # Pop organisation before super().__init__()
+        organisation = kwargs.pop('organisation', None)
         super().__init__(*args, **kwargs)
-        self.fields['cycle'].queryset = AppraisalCycle.objects.exclude(
-            status='closed'
-        )
+
+        if organisation:
+            # Cycles dropdown — only this org's non-closed cycles
+            self.fields['cycle'].queryset = (
+                AppraisalCycle.objects.filter(
+                    organisation=organisation
+                ).exclude(status='closed')
+            )
+
+            # Aspects — platform defaults (org=None) + org custom
+            self.fields['aspects'].queryset = (
+                PerformanceAspect.objects.filter(
+                    Q(organisation=None) |
+                    Q(organisation=organisation)
+                ).order_by('order')
+            )
+        else:
+            self.fields['cycle'].queryset = AppraisalCycle.objects.none()
+            self.fields['aspects'].queryset = PerformanceAspect.objects.none()
+
+        # Pre-select aspects if editing existing template
         if self.instance.pk:
             self.fields['aspects'].initial = self.instance.aspects.all()
 
         self.helper = FormHelper()
-        self.helper.form_tag = False  # Template handles the <form> tag
+        self.helper.form_tag = False
         self.helper.layout = Layout(
             Row(
                 Column('name', css_class='col-md-8'),
