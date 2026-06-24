@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% block title %}{{ profile.user.get_full_name }} — Profile{% endblock %}
+{% block page_title %}Staff Profile{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+
+        <!-- Identity Card -->
+        <div class="content-card text-center mb-4">
+            <div class="user-avatar mx-auto mb-3"
+                 style="width:64px;height:64px;font-size:1.5rem;">
+                {{ profile.user.first_name|first|upper }}
+            </div>
+            <h5 class="fw-bold mb-0">
+                {{ profile.user.get_full_name }}
+            </h5>
+            <p class="text-muted mb-2">{{ profile.user.username }}</p>
+
+            {% if profile.role == 'employee' %}
+                <span class="badge bg-success">Employee</span>
+            {% elif profile.role == 'reporting_officer' %}
+                <span class="badge bg-info text-dark">Reporting Officer</span>
+            {% elif profile.role == 'countersigning_officer' %}
+                <span class="badge bg-warning text-dark">
+                    Countersigning Officer
+                </span>
+            {% elif profile.role == 'hr_admin' %}
+                <span class="badge bg-danger">HR Admin</span>
+            {% endif %}
+
+            <hr>
+            <div class="text-start">
+                <small class="text-muted d-block mb-1">
+                    <i class="bi bi-envelope me-2"></i>
+                    {{ profile.user.email|default:"No email" }}
+                </small>
+                <small class="text-muted d-block mb-1">
+                    <i class="bi bi-phone me-2"></i>
+                    {{ profile.phone_number|default:"No phone" }}
+                </small>
+                <small class="text-muted d-block">
+                    <i class="bi bi-building me-2"></i>
+                    {{ profile.department|default:"No department" }}
+                </small>
+            </div>
+
+            <div class="d-grid mt-3">
+                <a href="{% url 'accounts:edit_user' profile.user.pk %}"
+                   class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-pencil me-1"></i> Edit Profile
+                </a>
+            </div>
+        </div>
+
+        <!-- Assignments Card -->
+        <div class="content-card">
+            <h6 class="fw-bold mb-3">Assigned Officers</h6>
+            <div class="mb-3">
+                <small class="text-muted d-block">Reporting Officer</small>
+                <span class="fw-semibold">
+                    {% if profile.reporting_officer %}
+                        {{ profile.reporting_officer.user.get_full_name }}
+                    {% else %}
+                        <span class="text-muted">Not assigned</span>
+                    {% endif %}
+                </span>
+            </div>
+            <div>
+                <small class="text-muted d-block">
+                    Countersigning Officer
+                </small>
+                <span class="fw-semibold">
+                    {% if profile.countersigning_officer %}
+                        {{ profile.countersigning_officer.user.get_full_name }}
+                    {% else %}
+                        <span class="text-muted">Not assigned</span>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="col-md-8">
+
+        <!-- Personal Records Card -->
+        <div class="content-card mb-4">
+            <h6 class="fw-bold mb-3">Personal Records</h6>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <small class="text-muted d-block">Date of Birth</small>
+                    <span>{{ profile.date_of_birth|default:"—" }}</span>
+                </div>
+                <div class="col-md-6">
+                    <small class="text-muted d-block">Local Government</small>
+                    <span>{{ profile.local_government|default:"—" }}</span>
+                </div>
+                <div class="col-md-6">
+                    <small class="text-muted d-block">Section</small>
+                    <span>{{ profile.section|default:"—" }}</span>
+                </div>
+                <div class="col-md-6">
+                    <small class="text-muted d-block">
+                        Present Substantive Grade
+                    </small>
+                    <span>
+                        {{ profile.present_substantive_grade|default:"—" }}
+                    </span>
+                </div>
+                <div class="col-md-6">
+                    <small class="text-muted d-block">
+                        Date of First Appointment
+                    </small>
+                    <span>
+                        {{ profile.date_of_first_appointment|default:"—" }}
+                    </span>
+                </div>
+                <div class="col-md-6">
+                    <small class="text-muted d-block">
+                        Date Appointed to Grade
+                    </small>
+                    <span>
+                        {{ profile.date_appointed_to_grade|default:"—" }}
+                    </span>
+                </div>
+                <div class="col-12">
+                    <small class="text-muted d-block">Qualification</small>
+                    <span>{{ profile.qualification|default:"—" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appraisals Card -->
+        <div class="content-card">
+            <h6 class="fw-bold mb-3">Appraisal History</h6>
+            {% if appraisals %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Cycle</th>
+                            <th>Status</th>
+                            <th>Date Assigned</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appraisal in appraisals %}
+                        <tr>
+                            <td class="fw-semibold">
+                                {{ appraisal.cycle.name }}
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">
+                                    {{ appraisal.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="text-muted">
+                                {{ appraisal.created_at|date:"d M Y" }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4 text-muted">
+                <i class="bi bi-file-earmark-text fs-2"></i>
+                <p class="mt-2 mb-0">No appraisals assigned yet.</p>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

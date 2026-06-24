@@ -1,0 +1,331 @@
+{% extends 'base.html' %}
+{% block title %}Assign Appraisals{% endblock %}
+{% block page_title %}Bulk Appraisal Assignment{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Department section header */
+    .dept-header {
+        background: #1a3a5c;
+        color: white;
+        padding: 8px 15px;
+        border-radius: 6px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+        margin-top: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* Employee row checkbox styling */
+    .employee-row {
+        display: flex;
+        align-items: center;
+        padding: 10px 15px;
+        border: 1px solid #e0e6ed;
+        border-radius: 6px;
+        margin-bottom: 6px;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .employee-row:hover {
+        background: #f0f7ff;
+        border-color: #4a9fd4;
+    }
+    .employee-row input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        margin-right: 12px;
+        cursor: pointer;
+        accent-color: #1a3a5c;
+    }
+    .employee-info {
+        flex: 1;
+    }
+    .employee-name {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #1a3a5c;
+    }
+    .employee-meta {
+        font-size: 0.78rem;
+        color: #7f8c8d;
+    }
+    .employee-grade {
+        font-size: 0.78rem;
+        color: #7f8c8d;
+        text-align: right;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h4>Bulk Appraisal Assignment</h4>
+    <p>
+        Select a cycle and template, then choose which
+        employees to assign appraisals to.
+    </p>
+</div>
+
+<form method="POST">
+{% csrf_token %}
+
+<div class="row g-4">
+
+    <!-- ── Left: Cycle and Template Selection ───── -->
+    <div class="col-md-4">
+
+        <div class="content-card">
+            <h6 class="fw-bold mb-4">
+                <i class="bi bi-gear me-2 text-primary"></i>
+                Step 1: Select Cycle and Template
+            </h6>
+
+            <!-- Cycle Selection -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">
+                    Appraisal Cycle <span class="text-danger">*</span>
+                </label>
+                <select name="cycle"
+                        id="cycleSelect"
+                        class="form-select"
+                        required>
+                    <option value="">— Select Active Cycle —</option>
+                    {% for cycle in cycles %}
+                    <option value="{{ cycle.pk }}">
+                        {{ cycle.name }} ({{ cycle.year }})
+                    </option>
+                    {% endfor %}
+                </select>
+                {% if not cycles %}
+                <div class="form-text text-danger">
+                    No active cycles found.
+                    <a href="{% url 'hr:cycle_list' %}">
+                        Activate a cycle first.
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Template Selection -->
+            <div class="mb-4">
+                <label class="form-label fw-semibold">
+                    Appraisal Template <span class="text-danger">*</span>
+                </label>
+                <select name="template"
+                        id="templateSelect"
+                        class="form-select"
+                        required>
+                    <option value="">— Select Template —</option>
+                    {% for template in templates %}
+                    <option value="{{ template.pk }}"
+                            data-cycle="{{ template.cycle.pk }}">
+                        {{ template.name }}
+                        ({{ template.cycle.name }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Info Box -->
+            <div class="p-3 rounded"
+                 style="background:#f0f9ff; font-size:0.82rem;">
+                <div class="fw-semibold mb-2">
+                    <i class="bi bi-info-circle me-1 text-primary"></i>
+                    How bulk assignment works:
+                </div>
+                <ul class="mb-0 ps-3 text-muted">
+                    <li class="mb-1">
+                        Select an active cycle and template
+                    </li>
+                    <li class="mb-1">
+                        Tick employees on the right
+                    </li>
+                    <li class="mb-1">
+                        Use "Select All" to tick a whole department
+                    </li>
+                    <li>
+                        Already-assigned employees are skipped safely
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ── Right: Employee Selection ────────────── -->
+    <div class="col-md-8">
+        <div class="content-card">
+            <div class="d-flex justify-content-between
+                        align-items-center mb-4">
+                <h6 class="fw-bold mb-0">
+                    <i class="bi bi-people me-2 text-primary"></i>
+                    Step 2: Select Employees
+                </h6>
+
+                <!-- Select All / Deselect All buttons -->
+                <div class="d-flex gap-2">
+                    <button type="button"
+                            class="btn btn-sm btn-outline-primary"
+                            onclick="selectAll()">
+                        <i class="bi bi-check-all me-1"></i>
+                        Select All
+                    </button>
+                    <button type="button"
+                            class="btn btn-sm btn-outline-secondary"
+                            onclick="deselectAll()">
+                        <i class="bi bi-x-circle me-1"></i>
+                        Deselect All
+                    </button>
+                </div>
+            </div>
+
+            <!--
+                Selected count tracker
+                Updates live as HR ticks/unticks employees
+            -->
+            <div class="mb-3 p-2 rounded text-center"
+                 style="background:#f8f9fa;">
+                <span id="selectedCount" class="fw-bold text-primary">
+                    0
+                </span>
+                <span class="text-muted">
+                    employee(s) selected
+                </span>
+            </div>
+
+            {% if employees %}
+
+                <!--
+                    Group employees by department.
+                    We track the current department to know
+                    when to show a new department header.
+                -->
+                {% regroup employees by department as dept_groups %}
+
+                {% for dept_group in dept_groups %}
+
+                <!-- Department Header with Select-All for that dept -->
+                <div class="dept-header">
+                    <span>
+                        {{ dept_group.grouper|default:"No Department" }}
+                        ({{ dept_group.list|length }} staff)
+                    </span>
+                    <button type="button"
+                            class="btn btn-sm btn-light"
+                            style="font-size:0.72rem; padding:2px 8px;"
+                            onclick="selectDept('dept_{{ forloop.counter }}')">
+                        Select All
+                    </button>
+                </div>
+
+                <!-- Employees in this department -->
+                {% for profile in dept_group.list %}
+                <label class="employee-row"
+                       id="dept_{{ forloop.parentloop.counter }}_row">
+                    <input type="checkbox"
+                           name="employees"
+                           value="{{ profile.user.pk }}"
+                           class="employee-checkbox dept_{{ forloop.parentloop.counter }}">
+                    <div class="employee-info">
+                        <div class="employee-name">
+                            {{ profile.user.get_full_name }}
+                        </div>
+                        <div class="employee-meta">
+                            {{ profile.user.username }}
+                            {% if profile.section %}
+                             — {{ profile.section }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="employee-grade">
+                        {{ profile.present_substantive_grade|default:"" }}
+                    </div>
+                </label>
+                {% endfor %}
+
+                {% endfor %}
+
+            {% else %}
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-people fs-1"></i>
+                <p class="mt-2">No employees found in your organisation.</p>
+                <a href="{% url 'accounts:create_user' %}"
+                   class="btn btn-primary btn-sm">
+                    Create Employee Accounts First
+                </a>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+</div>
+
+<!-- Submit Bar -->
+{% if employees and cycles %}
+<div class="content-card mt-3 d-flex
+            justify-content-between align-items-center">
+    <div class="text-muted" style="font-size:0.85rem;">
+        <i class="bi bi-info-circle me-1"></i>
+        Employees already assigned to the selected cycle
+        will be skipped automatically.
+    </div>
+    <button type="submit" class="btn btn-primary px-4">
+        <i class="bi bi-check-circle me-2"></i>
+        Assign Appraisals
+    </button>
+</div>
+{% endif %}
+
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Update the selected count display as checkboxes change
+    function updateCount() {
+        const checked = document.querySelectorAll(
+            '.employee-checkbox:checked'
+        ).length;
+        document.getElementById('selectedCount').textContent = checked;
+    }
+
+    // Select ALL employees across all departments
+    function selectAll() {
+        document.querySelectorAll('.employee-checkbox').forEach(cb => {
+            cb.checked = true;
+        });
+        updateCount();
+    }
+
+    // Deselect ALL employees
+    function deselectAll() {
+        document.querySelectorAll('.employee-checkbox').forEach(cb => {
+            cb.checked = false;
+        });
+        updateCount();
+    }
+
+    // Select all employees within one department
+    // Uses the class name we set on each department's checkboxes
+    function selectDept(deptClass) {
+        document.querySelectorAll('.' + deptClass).forEach(cb => {
+            cb.checked = true;
+        });
+        updateCount();
+    }
+
+    // Listen for any checkbox change to update the count
+    document.querySelectorAll('.employee-checkbox').forEach(cb => {
+        cb.addEventListener('change', updateCount);
+    });
+</script>
+{% endblock %}

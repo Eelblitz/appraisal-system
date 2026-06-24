@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block title %}Create User{% endblock %}
+{% block page_title %}Create Staff Account{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+
+        <!-- Account Details Card -->
+        <div class="content-card mb-4">
+            <h6 class="fw-bold mb-4">
+                <i class="bi bi-person-plus me-2 text-primary"></i>
+                Account Credentials
+            </h6>
+            <form method="POST" enctype="multipart/form-data" id="createUserForm">
+                {% csrf_token %}
+                {{ user_form|crispy }}
+        </div>
+
+        <!-- Profile Details Card -->
+        <div class="content-card">
+            <h6 class="fw-bold mb-4">
+                <i class="bi bi-card-list me-2 text-primary"></i>
+                Profile Details
+            </h6>
+                {{ profile_form|crispy }}
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Create Account
+                    </button>
+                    <a href="{% url 'accounts:user_list' %}"
+                       class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+    <!-- Guide Card -->
+    <div class="col-md-4">
+        <div class="content-card">
+            <h6 class="fw-bold mb-3">
+                <i class="bi bi-info-circle text-primary me-2"></i>
+                Role Guide
+            </h6>
+            <div class="mb-3">
+                <span class="badge bg-success mb-1">Employee</span>
+                <p class="text-muted" style="font-size:0.82rem;">
+                    Fills Part 1 of their own appraisal form.
+                    Pays to download completed PDF.
+                </p>
+            </div>
+            <div class="mb-3">
+                <span class="badge bg-info text-dark mb-1">
+                    Reporting Officer
+                </span>
+                <p class="text-muted" style="font-size:0.82rem;">
+                    Fills Part 2 and Part 3 for employees
+                    assigned under them.
+                </p>
+            </div>
+            <div class="mb-3">
+                <span class="badge bg-warning text-dark mb-1">
+                    Countersigning Officer
+                </span>
+                <p class="text-muted" style="font-size:0.82rem;">
+                    Fills Part 4. Final sign-off before
+                    appraisal is closed.
+                </p>
+            </div>
+            <div class="mb-3">
+                <span class="badge bg-danger mb-1">HR Admin</span>
+                <p class="text-muted" style="font-size:0.82rem;">
+                    Manages cycles, templates, categories
+                    and all staff accounts.
+                </p>
+            </div>
+            <hr>
+            <p class="text-muted" style="font-size:0.82rem;">
+                <i class="bi bi-lightbulb me-1 text-warning"></i>
+                Create Reporting Officers and Countersigning Officers
+                first — then assign them when creating employees.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

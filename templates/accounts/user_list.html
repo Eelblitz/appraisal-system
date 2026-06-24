@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% block title %}Manage Users{% endblock %}
+{% block page_title %}User Management{% endblock %}
+
+{% block content %}
+
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h4>Staff Accounts</h4>
+        <p>Manage all staff accounts in your organisation</p>
+    </div>
+    <a href="{% url 'accounts:create_user' %}" class="btn btn-primary">
+        <i class="bi bi-person-plus me-2"></i>Create New User
+    </a>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-2">
+        <div class="content-card text-center py-3">
+            <h4 class="fw-bold text-primary mb-0">{{ total }}</h4>
+            <small class="text-muted">Total Staff</small>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="content-card text-center py-3">
+            <h4 class="fw-bold text-success mb-0">{{ employees }}</h4>
+            <small class="text-muted">Employees</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="content-card text-center py-3">
+            <h4 class="fw-bold text-info mb-0">{{ reporting_officers }}</h4>
+            <small class="text-muted">Reporting Officers</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="content-card text-center py-3">
+            <h4 class="fw-bold text-warning mb-0">{{ countersigning_officers }}</h4>
+            <small class="text-muted">Countersigning Officers</small>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="content-card text-center py-3">
+            <h4 class="fw-bold text-danger mb-0">{{ hr_admins }}</h4>
+            <small class="text-muted">HR Admins</small>
+        </div>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="content-card">
+    {% if users %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Name</th>
+                    <th>Username</th>
+                    <th>Department</th>
+                    <th>Grade</th>
+                    <th>Role</th>
+                    <th>Reporting Officer</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for profile in users %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="user-avatar"
+                                 style="width:32px;height:32px;font-size:0.75rem;">
+                                {{ profile.user.first_name|first|upper }}
+                            </div>
+                            <div>
+                                <div class="fw-semibold">
+                                    {{ profile.user.get_full_name }}
+                                </div>
+                                <small class="text-muted">
+                                    {{ profile.user.email }}
+                                </small>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-muted">{{ profile.user.username }}</td>
+                    <td>{{ profile.department|default:"—" }}</td>
+                    <td>
+                        {{ profile.present_substantive_grade|default:"—" }}
+                    </td>
+                    <td>
+                        {% if profile.role == 'employee' %}
+                            <span class="badge bg-success">Employee</span>
+                        {% elif profile.role == 'reporting_officer' %}
+                            <span class="badge bg-info text-dark">
+                                Reporting Officer
+                            </span>
+                        {% elif profile.role == 'countersigning_officer' %}
+                            <span class="badge bg-warning text-dark">
+                                Countersigning Officer
+                            </span>
+                        {% elif profile.role == 'hr_admin' %}
+                            <span class="badge bg-danger">HR Admin</span>
+                        {% else %}
+                            <span class="badge bg-secondary">
+                                {{ profile.get_role_display }}
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="text-muted" style="font-size:0.82rem;">
+                        {% if profile.reporting_officer %}
+                            {{ profile.reporting_officer.user.get_full_name }}
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'accounts:user_detail' profile.user.pk %}"
+                           class="btn btn-sm btn-outline-secondary me-1"
+                           title="View Details">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a href="{% url 'accounts:edit_user' profile.user.pk %}"
+                           class="btn btn-sm btn-outline-primary"
+                           title="Edit">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-people fs-1"></i>
+        <p class="mt-2">No staff accounts yet.</p>
+        <a href="{% url 'accounts:create_user' %}" class="btn btn-primary">
+            Create First Staff Account
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

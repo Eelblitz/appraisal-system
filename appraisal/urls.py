@@ -1,21 +1,57 @@
 from django.urls import path
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
+from . import views
 
 app_name = 'appraisal'
 
-# Temporary placeholder view — returns a simple "coming soon" page
-# We use this so base.html doesn't crash while we build each section
-@login_required
-def coming_soon(request):
-    return render(request, 'coming_soon.html', {'page': 'Appraisal'})
-
 urlpatterns = [
-    path('my/', coming_soon, name='my_appraisals'),
-    path('team/', coming_soon, name='team_appraisals'),
-    path('detail/<int:pk>/', coming_soon, name='detail'),
-    path('part1/<int:pk>/', coming_soon, name='part1_form'),
-    path('part2/<int:pk>/', coming_soon, name='part2_form'),
-    path('part3/<int:pk>/', coming_soon, name='part3_form'),
-    path('part4/<int:pk>/', coming_soon, name='part4_form'),
+    # HR views
+    path(
+        'assign/',
+        views.assign_appraisals,
+        name='assign_appraisals'
+    ),
+    path(
+        'all/',
+        views.appraisal_list_hr,
+        name='appraisal_list_hr'
+    ),
+
+    # Employee views
+    path(
+        'my/',
+        views.my_appraisals,
+        name='my_appraisals'
+    ),
+    path(
+        'team/',
+        views.team_appraisals,
+        name='team_appraisals'
+    ),
+    path(
+        'detail/<int:pk>/',
+        views.appraisal_detail,
+        name='detail'
+    ),
+
+    # Form parts (placeholders for now — built next)
+    path(
+        'part1/<int:pk>/',
+        views.my_appraisals,
+        name='part1_form'
+    ),
+    path(
+        'part2/<int:pk>/',
+        views.my_appraisals,
+        name='part2_form'
+    ),
+    path(
+        'part3/<int:pk>/',
+        views.my_appraisals,
+        name='part3_form'
+    ),
+    path(
+        'part4/<int:pk>/',
+        views.my_appraisals,
+        name='part4_form'
+    ),
 ]

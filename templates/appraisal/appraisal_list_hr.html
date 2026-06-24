@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% block title %}All Appraisals{% endblock %}
+{% block page_title %}All Appraisals{% endblock %}
+
+{% block content %}
+
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h4>All Appraisals</h4>
+        <p>Track all appraisals in your organisation</p>
+    </div>
+    <a href="{% url 'appraisal:assign_appraisals' %}"
+       class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>Assign Appraisals
+    </a>
+</div>
+
+<!-- Filters -->
+<div class="content-card mb-3">
+    <form method="GET" class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">Filter by Cycle</label>
+            <select name="cycle" class="form-select form-select-sm">
+                <option value="">All Cycles</option>
+                {% for cycle in cycles %}
+                <option value="{{ cycle.pk }}"
+                    {% if cycle_filter == cycle.pk|stringformat:"s" %}
+                        selected
+                    {% endif %}>
+                    {{ cycle.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">Filter by Status</label>
+            <select name="status" class="form-select form-select-sm">
+                <option value="">All Statuses</option>
+                {% for value, label in status_choices %}
+                <option value="{{ value }}"
+                    {% if status_filter == value %}selected{% endif %}>
+                    {{ label }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-outline-primary btn-sm w-100">
+                <i class="bi bi-filter me-1"></i> Filter
+            </button>
+        </div>
+        <div class="col-md-2">
+            <a href="{% url 'appraisal:appraisal_list_hr' %}"
+               class="btn btn-outline-secondary btn-sm w-100">
+                Clear
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="content-card">
+    {% if appraisals %}
+    <div class="mb-2 text-muted" style="font-size:0.82rem;">
+        Showing {{ appraisals.count }} appraisal(s)
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Employee</th>
+                    <th>Department</th>
+                    <th>Cycle</th>
+                    <th>Template</th>
+                    <th>Status</th>
+                    <th>Assigned</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for appraisal in appraisals %}
+                <tr>
+                    <td class="fw-semibold">
+                        {{ appraisal.employee.get_full_name }}
+                    </td>
+                    <td class="text-muted" style="font-size:0.82rem;">
+                        {{ appraisal.employee.profile.department|default:"—" }}
+                    </td>
+                    <td>{{ appraisal.cycle.name }}</td>
+                    <td class="text-muted" style="font-size:0.82rem;">
+                        {{ appraisal.template.name }}
+                    </td>
+                    <td>
+                        {% if appraisal.status == 'pending' %}
+                            <span class="badge bg-secondary">Pending</span>
+                        {% elif appraisal.status == 'part1_submitted' %}
+                            <span class="badge bg-info text-dark">
+                                Part 1 Done
+                            </span>
+                        {% elif appraisal.status == 'part2_submitted' %}
+                            <span class="badge bg-primary">Part 2 Done</span>
+                        {% elif appraisal.status == 'part3_submitted' %}
+                            <span class="badge bg-warning text-dark">
+                                Part 3 Done
+                            </span>
+                        {% elif appraisal.status == 'completed' %}
+                            <span class="badge bg-success">Completed</span>
+                        {% elif appraisal.status == 'closed' %}
+                            <span class="badge bg-dark">Closed</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-muted" style="font-size:0.82rem;">
+                        {{ appraisal.created_at|date:"d M Y" }}
+                    </td>
+                    <td>
+                        <a href="{% url 'appraisal:detail' appraisal.pk %}"
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-file-earmark-text fs-1"></i>
+        <p class="mt-2">No appraisals found.</p>
+        <a href="{% url 'appraisal:assign_appraisals' %}"
+           class="btn btn-primary">
+            Assign First Appraisal
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

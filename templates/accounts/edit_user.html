@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block title %}Edit User{% endblock %}
+{% block page_title %}Edit Staff Account{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="content-card mb-4">
+            <h6 class="fw-bold mb-1">
+                {{ profile.user.get_full_name }}
+            </h6>
+            <small class="text-muted">
+                {{ profile.user.username }} —
+                {{ profile.get_role_display }}
+            </small>
+            <hr>
+            <h6 class="fw-bold mb-4 mt-3">Update Profile Details</h6>
+
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!-- Basic name and email fields -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">First Name</label>
+                        <input type="text"
+                               name="first_name"
+                               class="form-control"
+                               value="{{ profile.user.first_name }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Last Name</label>
+                        <input type="text"
+                               name="last_name"
+                               class="form-control"
+                               value="{{ profile.user.last_name }}">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Email</label>
+                    <input type="email"
+                           name="email"
+                           class="form-control"
+                           value="{{ profile.user.email }}">
+                </div>
+
+                <!-- Profile fields via crispy -->
+                {{ profile_form|crispy }}
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Save Changes
+                    </button>
+                    <a href="{% url 'accounts:user_list' %}"
+                       class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

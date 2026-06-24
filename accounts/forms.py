@@ -2,15 +2,15 @@ from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Row, Column, Submit, Field
+from crispy_forms.layout import Layout, Row, Column, Field
 from .models import UserProfile
 
 
 class LoginForm(AuthenticationForm):
     """
     Extends Django's built-in login form.
-    We only add crispy styling — the authentication
-    logic is already handled by Django.
+    Django handles all the authentication logic.
+    We only add crispy styling.
     """
     username = forms.CharField(
         widget=forms.TextInput(attrs={'placeholder': 'Username'})
@@ -22,18 +22,13 @@ class LoginForm(AuthenticationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
-        self.helper.layout = Layout(
-            Field('username', css_class='form-control mb-3'),
-            Field('password', css_class='form-control mb-3'),
-            Submit('submit', 'Login', css_class='btn btn-primary w-100')
-        )
+        self.helper.form_tag = False
 
 
 class UserRegistrationForm(forms.ModelForm):
     """
-    HR uses this to create new employee accounts.
-    Employees do not self-register — HR creates their accounts.
-    This keeps the system controlled.
+    Creates a new Django User account.
+    Used by HR Admin to onboard employees.
     """
     password1 = forms.CharField(
         label='Password',
@@ -51,6 +46,7 @@ class UserRegistrationForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
+        self.helper.form_tag = False
         self.helper.layout = Layout(
             Row(
                 Column('first_name', css_class='col-md-6'),
@@ -64,26 +60,16 @@ class UserRegistrationForm(forms.ModelForm):
                 Column('password1', css_class='col-md-6'),
                 Column('password2', css_class='col-md-6'),
             ),
-            Submit('submit', 'Create Account', css_class='btn btn-primary')
         )
 
     def clean_password2(self):
-        """
-        clean_password2 runs automatically when the form is validated.
-        Django calls any method named clean_<fieldname> during validation.
-        We use it to make sure both passwords match.
-        """
-        password1 = self.cleaned_data.get('password1')
-        password2 = self.cleaned_data.get('password2')
-        if password1 and password2 and password1 != password2:
-            raise forms.ValidationError('Passwords do not match')
-        return password2
+        p1 = self.cleaned_data.get('password1')
+        p2 = self.cleaned_data.get('password2')
+        if p1 and p2 and p1 != p2:
+            raise forms.ValidationError('Passwords do not match.')
+        return p2
 
     def save(self, commit=True):
-        """
-        Override save() to hash the password properly.
-        Never store plain text passwords — set_password() hashes it.
-        """
         user = super().save(commit=False)
         user.set_password(self.cleaned_data['password1'])
         if commit:
@@ -93,9 +79,20 @@ class UserRegistrationForm(forms.ModelForm):
 
 class UserProfileForm(forms.ModelForm):
     """
-    Used when creating or editing a user's profile details.
-    Maps to the UserProfile model fields.
+    Creates or updates a UserProfile.
+
+    Why does this form accept organisation?
+    The reporting_officer and countersigning_officer dropdowns
+    must only show users from the SAME organisation.
+
+    Without passing organisation, the dropdowns would show
+    ALL users from ALL organisations — a serious data leak.
+
+    Pattern: pop organisation from kwargs before super().__init__()
+    because ModelForm does not know what to do with it.
+    Then use it to filter the queryset on those two fields.
     """
+
     class Meta:
         model = UserProfile
         fields = [
@@ -114,14 +111,56 @@ class UserProfileForm(forms.ModelForm):
             'profile_photo',
         ]
         widgets = {
-            'date_of_birth': forms.DateInput(attrs={'type': 'date'}),
-            'date_of_first_appointment': forms.DateInput(attrs={'type': 'date'}),
-            'date_appointed_to_grade': forms.DateInput(attrs={'type': 'date'}),
+            'date_of_birth': forms.DateInput(
+                attrs={'type': 'date'}
+            ),
+            'date_of_first_appointment': forms.DateInput(
+                attrs={'type': 'date'}
+            ),
+            'date_appointed_to_grade': forms.DateInput(
+                attrs={'type': 'date'}
+            ),
         }
 
     def __init__(self, *args, **kwargs):
+        # Pop organisation before calling super().__init__()
+        # This is the standard pattern for passing extra
+        # context into a Django ModelForm
+        organisation = kwargs.pop('organisation', None)
         super().__init__(*args, **kwargs)
+
+        if organisation:
+            # Reporting officer dropdown:
+            # Only show users with reporting_officer role
+            # in the same organisation
+            self.fields['reporting_officer'].queryset = (
+                UserProfile.objects.filter(
+                    organisation=organisation,
+                    role='reporting_officer'
+                ).select_related('user')
+            )
+
+            # Countersigning officer dropdown:
+            # Only show users with countersigning_officer role
+            # in the same organisation
+            self.fields['countersigning_officer'].queryset = (
+                UserProfile.objects.filter(
+                    organisation=organisation,
+                    role='countersigning_officer'
+                ).select_related('user')
+            )
+        else:
+            # If no organisation, show empty dropdowns
+            # This prevents accidental data leaks
+            self.fields['reporting_officer'].queryset = (
+                UserProfile.objects.none()
+            )
+            self.fields['countersigning_officer'].queryset = (
+                UserProfile.objects.none()
+            )
+
         self.helper = FormHelper()
+        self.helper.form_tag = False
         self.helper.layout = Layout(
             Row(
                 Column('role', css_class='col-md-6'),
@@ -146,5 +185,4 @@ class UserProfileForm(forms.ModelForm):
                 Column('countersigning_officer', css_class='col-md-6'),
             ),
             'profile_photo',
-            Submit('submit', 'Save Profile', css_class='btn btn-primary mt-3')
         )

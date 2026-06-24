@@ -246,6 +246,11 @@
             <i class="bi bi-list-check"></i> Performance Aspects
         </a>
 
+        <a href="{% url 'appraisal:assign_appraisals' %}"
+           class="nav-link-item {% if request.resolver_match.url_name == 'assign_appraisals' %}active{% endif %}">
+            <i class="bi bi-person-check"></i> Assign Appraisals
+        </a>
+
         <a href="{% url 'accounts:user_list' %}"
            class="nav-link-item {% if request.resolver_match.url_name == 'user_list' %}active{% endif %}">
             <i class="bi bi-people-fill"></i> Manage Users
