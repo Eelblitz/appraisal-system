@@ -1,0 +1,440 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load appraisal_tags %}
+
+{% block title %}Part 2 — Performance Assessment{% endblock %}
+{% block page_title %}Part 2 — Reporting Officer's Assessment{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-header {
+        background: linear-gradient(135deg, #1a3a5c, #2e6da4);
+        color: white;
+        padding: 20px 25px;
+        border-radius: 10px;
+        margin-bottom: 24px;
+    }
+    .form-section {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        background: white;
+    }
+    .form-section-title {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #1a3a5c;
+        background: #f0f7ff;
+        padding: 6px 12px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        border-left: 3px solid #1a3a5c;
+    }
+
+    /* Duty reference box */
+    .duty-ref {
+        background: #f8f9fa;
+        border-left: 3px solid #4a9fd4;
+        padding: 8px 14px;
+        border-radius: 0 6px 6px 0;
+        font-size: 0.85rem;
+        margin-bottom: 6px;
+        color: #495057;
+    }
+    .duty-ref-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #6c757d;
+        text-transform: uppercase;
+    }
+
+    /* Aspect rating table */
+    .aspect-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 6px;
+    }
+    .aspect-row {
+        background: white;
+        border: 1px solid #e0e6ed;
+        border-radius: 8px;
+    }
+    .aspect-row:hover {
+        background: #f8fbff;
+        border-color: #4a9fd4;
+    }
+    .aspect-name {
+        font-weight: 600;
+        font-size: 0.88rem;
+        color: #1a3a5c;
+        padding: 12px 15px;
+        width: 25%;
+    }
+    .aspect-outstanding {
+        font-size: 0.78rem;
+        color: #27ae60;
+        padding: 12px 10px;
+        width: 28%;
+    }
+    .aspect-unsatisfactory {
+        font-size: 0.78rem;
+        color: #e74c3c;
+        padding: 12px 10px;
+        width: 28%;
+    }
+    .aspect-ratings {
+        padding: 12px 15px;
+        width: 19%;
+    }
+    .rating-options {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+    .rating-option {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+    }
+    .rating-option input[type="radio"] {
+        accent-color: #1a3a5c;
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+    }
+    .rating-option label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #495057;
+        cursor: pointer;
+    }
+    .rating-option input[type="radio"]:checked + label {
+        color: #1a3a5c;
+    }
+
+    /* Overall rating */
+    .overall-rating-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+        margin-top: 10px;
+    }
+    .overall-option {
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        padding: 12px 8px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .overall-option:hover {
+        border-color: #1a3a5c;
+        background: #f0f7ff;
+    }
+    .overall-option input[type="radio"] {
+        display: none;
+    }
+    .overall-option input[type="radio"]:checked ~ .overall-label {
+        color: #1a3a5c;
+        font-weight: 700;
+    }
+    .overall-option:has(input:checked) {
+        border-color: #1a3a5c;
+        background: #e8f4fd;
+    }
+    .overall-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1a3a5c;
+        display: block;
+        margin-bottom: 4px;
+    }
+    .overall-label {
+        font-size: 0.72rem;
+        color: #6c757d;
+        display: block;
+    }
+
+    /* Sticky submit bar */
+    .submit-bar {
+        position: sticky;
+        bottom: 0;
+        background: white;
+        border-top: 2px solid #1a3a5c;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 50;
+        box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
+        border-radius: 0 0 10px 10px;
+        margin-top: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Form Header -->
+<div class="form-header">
+    <h5>
+        <i class="bi bi-file-earmark-check me-2"></i>
+        GEN 79 — Annual Performance Evaluation Report
+    </h5>
+    <p>
+        Part Two: Reporting Officer's Assessment —
+        {{ appraisal.employee.get_full_name }}
+        &mdash; {{ appraisal.cycle.name }}
+    </p>
+</div>
+
+<!-- Period Banner -->
+<div class="alert alert-info mb-4" style="font-size:0.85rem;">
+    <i class="bi bi-calendar-range me-2"></i>
+    <strong>Period of Report:</strong>
+    {{ appraisal.cycle.period_from|date:"d F Y" }}
+    to
+    {{ appraisal.cycle.period_to|date:"d F Y" }}
+</div>
+
+<form method="POST">
+{% csrf_token %}
+
+<!-- ═══ REFERENCE: Employee's Main Duties from Part 1 ═══ -->
+{% if part_one %}
+<div class="form-section">
+    <div class="form-section-title">
+        Reference — Employee's Main Duties (from Part 1)
+        <span class="float-end fw-normal text-muted"
+              style="font-size:0.7rem;text-transform:none;">
+            Read only — for your reference while assessing
+        </span>
+    </div>
+    <div class="row g-2">
+        {% if part_one.present_job %}
+        <div class="col-12 mb-2">
+            <span class="duty-ref-label">Present Job</span>
+            <div class="duty-ref">{{ part_one.present_job }}</div>
+        </div>
+        {% endif %}
+        {% if part_one.main_duty_1 %}
+        <div class="col-md-6">
+            <span class="duty-ref-label">Main Duty 1</span>
+            <div class="duty-ref">{{ part_one.main_duty_1 }}</div>
+        </div>
+        {% endif %}
+        {% if part_one.main_duty_2 %}
+        <div class="col-md-6">
+            <span class="duty-ref-label">Main Duty 2</span>
+            <div class="duty-ref">{{ part_one.main_duty_2 }}</div>
+        </div>
+        {% endif %}
+        {% if part_one.main_duty_3 %}
+        <div class="col-md-6">
+            <span class="duty-ref-label">Main Duty 3</span>
+            <div class="duty-ref">{{ part_one.main_duty_3 }}</div>
+        </div>
+        {% endif %}
+        {% if part_one.main_duty_4 %}
+        <div class="col-md-6">
+            <span class="duty-ref-label">Main Duty 4</span>
+            <div class="duty-ref">{{ part_one.main_duty_4 }}</div>
+        </div>
+        {% endif %}
+        {% if part_one.main_duty_5 %}
+        <div class="col-md-6">
+            <span class="duty-ref-label">Main Duty 5</span>
+            <div class="duty-ref">{{ part_one.main_duty_5 }}</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+
+<!-- ═══ FIELD 12: Job Description Agreement ═══ -->
+<div class="form-section">
+    <div class="form-section-title">Field 12: Job Description Agreement</div>
+    {{ form.agrees_with_job_description|as_crispy_field }}
+    {{ form.job_description_disagreement|as_crispy_field }}
+</div>
+
+
+<!-- ═══ FIELD 13: Performance Assessment ═══ -->
+<div class="form-section">
+    <div class="form-section-title">Field 13: Assessment of Performance</div>
+    <p class="text-muted" style="font-size:0.82rem;">
+        What is needed here is an indication, for each of the
+        duties in 11(a), of how far he/she has achieved the
+        required results.
+    </p>
+    {{ form.performance_assessment|as_crispy_field }}
+</div>
+
+
+<!-- ═══ FIELD 14: Aspects Rating Table ═══ -->
+<div class="form-section">
+    <div class="form-section-title">
+        Field 14: Aspects of Performance
+        <span class="float-end fw-normal text-muted"
+              style="font-size:0.7rem;text-transform:none;">
+            A = Outstanding &nbsp;|&nbsp; E = Unsatisfactory &nbsp;|&nbsp;
+            B, C, D = Intermediate
+        </span>
+    </div>
+    <p class="text-muted mb-3" style="font-size:0.82rem;">
+        Rate each aspect by selecting A, B, C, D or E.
+        Rating A or E should be given only if you believe
+        it is a generally true statement that could be
+        supported by specific occurrences.
+    </p>
+
+    <table class="aspect-table">
+        <thead>
+            <tr>
+                <th style="padding:8px 15px;font-size:0.78rem;
+                           color:#6c757d;font-weight:600;">
+                    Aspect
+                </th>
+                <th style="padding:8px 10px;font-size:0.78rem;
+                           color:#27ae60;font-weight:600;">
+                    Outstanding (A)
+                </th>
+                <th style="padding:8px 10px;font-size:0.78rem;
+                           color:#e74c3c;font-weight:600;">
+                    Unsatisfactory (E)
+                </th>
+                <th style="padding:8px 15px;font-size:0.78rem;
+                           color:#6c757d;font-weight:600;">
+                    Rating
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for aspect in aspects %}
+            <tr class="aspect-row">
+                <td class="aspect-name">{{ aspect.label }}</td>
+                <td class="aspect-outstanding">
+                    {{ aspect.outstanding_description }}
+                </td>
+                <td class="aspect-unsatisfactory">
+                    {{ aspect.unsatisfactory_description }}
+                </td>
+                <td class="aspect-ratings">
+                    <div class="rating-options">
+                        {% for value, label in rating_choices %}
+                        {% if value != 'NA' %}
+                        <div class="rating-option">
+                            <input
+                                type="radio"
+                                name="rating_{{ aspect.id }}"
+                                id="rating_{{ aspect.id }}_{{ value }}"
+                                value="{{ value }}"
+                                {% if existing_ratings|default_if_none:"" %}
+                                    {% if value == existing_ratings|get_item:aspect.id %}
+                                        checked
+                                    {% endif %}
+                                {% else %}
+                                    {% if value == 'C' %}checked{% endif %}
+                                {% endif %}
+                            >
+                            <label
+                                for="rating_{{ aspect.id }}_{{ value }}">
+                                {{ value }}
+                            </label>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+<!-- ═══ OVERALL RATING ═══ -->
+<div class="form-section">
+    <div class="form-section-title">Overall Performance Rating</div>
+    <p class="text-muted mb-3" style="font-size:0.82rem;">
+        Indicate overall performance by selecting the
+        appropriate rating below. This assessment should
+        reflect the performance actually achieved in the
+        circumstances which prevailed.
+    </p>
+
+    <div class="overall-rating-grid">
+        {% for value, label in form.fields.overall_rating.choices %}
+        <label class="overall-option">
+            <input type="radio"
+                   name="overall_rating"
+                   value="{{ value }}"
+                   {% if form.instance.overall_rating == value %}
+                       checked
+                   {% endif %}>
+            <span class="overall-number">{{ value }}</span>
+            <span class="overall-label">
+                {% if value == '1' %}Outstanding
+                {% elif value == '2' %}Very Good
+                {% elif value == '3' %}Good
+                {% elif value == '4' %}Fair
+                {% elif value == '5' %}Unsatisfactory
+                {% endif %}
+            </span>
+        </label>
+        {% endfor %}
+    </div>
+</div>
+
+
+<!-- ═══ REPORTING OFFICER DETAILS ═══ -->
+<div class="form-section">
+    <div class="form-section-title">Reporting Officer Details</div>
+    <div class="row g-3">
+        <div class="col-md-4">
+            {{ form.reporting_officer_grade|as_crispy_field }}
+        </div>
+        <div class="col-md-4">
+            {{ form.reporting_officer_job_title|as_crispy_field }}
+        </div>
+        <div class="col-md-4">
+            {{ form.years_known|as_crispy_field }}
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══ STICKY SUBMIT BAR ═══ -->
+<div class="submit-bar">
+    <div class="text-muted" style="font-size:0.82rem;">
+        <i class="bi bi-info-circle me-1"></i>
+        After submitting Part 2, you will be taken
+        directly to Part 3.
+    </div>
+    <div class="d-flex gap-2">
+        <button type="submit"
+                name="action"
+                value="draft"
+                class="btn btn-outline-primary">
+            <i class="bi bi-save me-1"></i> Save Draft
+        </button>
+        <button type="submit"
+                name="action"
+                value="submit"
+                class="btn btn-primary"
+                onclick="return confirm(
+                    'Submit Part 2? You will be taken to Part 3.'
+                )">
+            <i class="bi bi-arrow-right-circle me-1"></i>
+            Submit Part 2 → Go to Part 3
+        </button>
+    </div>
+</div>
+
+</form>
+{% endblock %}

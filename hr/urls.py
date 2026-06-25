@@ -18,7 +18,9 @@ urlpatterns = [
 
     # Aspects
     path('aspects/', views.aspect_list, name='aspect_list'),
+    path('aspects/create/', views.aspect_create, name='aspect_create'),
     path('aspects/<int:pk>/edit/', views.aspect_edit, name='aspect_edit'),
+    path('aspects/<int:pk>/toggle/', views.aspect_toggle, name='aspect_toggle'),
 
     # Templates
     path('templates/', views.template_list, name='template_list'),

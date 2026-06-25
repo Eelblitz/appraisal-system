@@ -33,24 +33,25 @@ urlpatterns = [
         name='detail'
     ),
 
-    # Form parts (placeholders for now — built next)
-    path('part1/<int:pk>/',
-    views.part1_form,
-    name='part1_form'
-),
+    # Form parts
+    path(
+        'part1/<int:pk>/',
+        views.part1_form,
+        name='part1_form'
+    ),
     path(
         'part2/<int:pk>/',
-        views.my_appraisals,
+        views.part2_form,
         name='part2_form'
     ),
     path(
         'part3/<int:pk>/',
-        views.my_appraisals,
+        views.part3_form,
         name='part3_form'
     ),
     path(
         'part4/<int:pk>/',
-        views.my_appraisals,
+        views.part4_form,
         name='part4_form'
     ),
 ]

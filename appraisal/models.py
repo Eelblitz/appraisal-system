@@ -92,14 +92,23 @@ class PartOne(models.Model):
 
 
 class PartTwo(models.Model):
-    RATING_CHOICES = [
-        ('A', 'A - Outstanding'),
-        ('B', 'B'),
-        ('C', 'C'),
-        ('D', 'D'),
-        ('E', 'E - Unsatisfactory'),
-        ('NA', 'Not Applicable'),
-    ]
+    """
+    PART TWO — Reporting Officer's Assessment
+    Fields 12, 13, 14 and overall rating.
+
+    IMPORTANT ARCHITECTURE DECISION:
+    We removed the 16 hardcoded rating fields
+    (rating_foresight, rating_penetration etc.)
+
+    Instead, ratings are stored in AppraisalAspectRating
+    which links PartTwo → PerformanceAspect → rating (A-E)
+
+    Why?
+    1. Different organisations use different aspects
+    2. HR can add/remove aspects per template
+    3. Dynamic approach scales to any number of aspects
+    4. One source of truth for aspect data
+    """
 
     OVERALL_RATING_CHOICES = [
         ('1', '1 - Outstanding'),
@@ -114,42 +123,59 @@ class PartTwo(models.Model):
         on_delete=models.CASCADE,
         related_name='part_two'
     )
-    agrees_with_job_description = models.BooleanField(default=True)
-    job_description_disagreement = models.TextField(blank=True)
-    performance_assessment = models.TextField()
-    rating_foresight = models.CharField(max_length=2, choices=RATING_CHOICES, default='C')
-    rating_penetration = models.CharField(max_length=2, choices=RATING_CHOICES, default='C')
-    rating_judgement = models.CharField(max_length=2, choices=RATING_CHOICES, default='C')
-    rating_expression_paper = models.CharField(max_length=2, choices=RATING_CHOICES, default='C')
-    rating_oral_expression = models.CharField(max_length=2, choices=RATING_CHOICES, default='C')
-    rating_numerical_ability = models.CharField(max_length=2, choices=RATING_CHOICES, default='C')
-    rating_relations_colleagues = models.CharField(max_length=2, choices=RATING_CHOICES, default='C')
-    rating_relations_public = models.CharField(max_length=2, choices=RATING_CHOICES, default='C')
-    rating_acceptance_responsibility = models.CharField(max_length=2, choices=RATING_CHOICES, default='C')
-    rating_reliability_pressure = models.CharField(max_length=2, choices=RATING_CHOICES, default='C')
-    rating_drive_determination = models.CharField(max_length=2, choices=RATING_CHOICES, default='C')
-    rating_professional_knowledge = models.CharField(max_length=2, choices=RATING_CHOICES, default='C')
-    rating_management_staff = models.CharField(max_length=2, choices=RATING_CHOICES, default='C')
-    rating_output_of_work = models.CharField(max_length=2, choices=RATING_CHOICES, default='C')
-    rating_quality_of_work = models.CharField(max_length=2, choices=RATING_CHOICES, default='C')
-    rating_punctuality = models.CharField(max_length=2, choices=RATING_CHOICES, default='C')
-    overall_rating = models.CharField(max_length=1, choices=OVERALL_RATING_CHOICES)
+
+    # Field 12
+    agrees_with_job_description = models.BooleanField(
+        default=True,
+        verbose_name='Do you agree with the job description?'
+    )
+    job_description_disagreement = models.TextField(
+        blank=True,
+        verbose_name='If NO, state unresolved differences'
+    )
+
+    # Field 13
+    performance_assessment = models.TextField(
+        verbose_name='Assessment of Performance',
+        help_text=(
+            'How effective is he/she in the performance '
+            'of duties set out in 11(a)?'
+        )
+    )
+
+    # Field 14 overall rating (diamond boxes 1-5)
+    overall_rating = models.CharField(
+        max_length=1,
+        choices=OVERALL_RATING_CHOICES,
+        verbose_name='Overall Performance Rating'
+    )
+
+    # Reporting officer signature fields
     reporting_officer = models.ForeignKey(
         User,
         on_delete=models.PROTECT,
         related_name='part_two_reports'
     )
-    reporting_officer_grade = models.CharField(max_length=100)
-    reporting_officer_job_title = models.CharField(max_length=200)
-    years_known = models.PositiveIntegerField(default=0)
+    reporting_officer_grade = models.CharField(
+        max_length=100,
+        blank=True
+    )
+    reporting_officer_job_title = models.CharField(
+        max_length=200,
+        blank=True
+    )
+    years_known = models.PositiveIntegerField(
+        default=0,
+        help_text='He has served under me for the past X years'
+    )
+
     is_draft = models.BooleanField(default=True)
     submitted_at = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"Part 2 — {self.appraisal}"
-
-
+    
 class PartThree(models.Model):
     PROMOTION_FITNESS_CHOICES = [
         ('well_fitted', 'Well Fitted'),
@@ -221,6 +247,28 @@ class PartFour(models.Model):
 
 
 class AppraisalAspectRating(models.Model):
+    """
+    Stores each individual aspect rating for Part 2.
+
+    One row per aspect per appraisal.
+    Example:
+        part_two=<PartTwo for Musa 2024>
+        aspect=<Foresight>
+        rating='A'
+
+    This replaces the 16 hardcoded fields that were
+    previously on PartTwo directly.
+    """
+
+    RATING_CHOICES = [
+        ('A', 'A - Outstanding'),
+        ('B', 'B'),
+        ('C', 'C'),
+        ('D', 'D'),
+        ('E', 'E - Unsatisfactory'),
+        ('NA', 'Not Applicable'),
+    ]
+
     part_two = models.ForeignKey(
         PartTwo,
         on_delete=models.CASCADE,
@@ -232,7 +280,8 @@ class AppraisalAspectRating(models.Model):
     )
     rating = models.CharField(
         max_length=2,
-        choices=PartTwo.RATING_CHOICES
+        choices=RATING_CHOICES,
+        default='C'
     )
     comment = models.TextField(blank=True)
 

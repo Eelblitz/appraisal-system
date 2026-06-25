@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Part 3 — Training and Promotability{% endblock %}
+{% block page_title %}Part 3 — Training Needs and Promotability{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-header {
+        background: linear-gradient(135deg, #1a3a5c, #2e6da4);
+        color: white;
+        padding: 20px 25px;
+        border-radius: 10px;
+        margin-bottom: 24px;
+    }
+    .form-section {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        background: white;
+    }
+    .form-section-title {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #1a3a5c;
+        background: #f0f7ff;
+        padding: 6px 12px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        border-left: 3px solid #1a3a5c;
+    }
+    .submit-bar {
+        position: sticky;
+        bottom: 0;
+        background: white;
+        border-top: 2px solid #1a3a5c;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 50;
+        box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
+        margin-top: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="form-header">
+    <h5>
+        <i class="bi bi-mortarboard me-2"></i>
+        GEN 79 — Annual Performance Evaluation Report
+    </h5>
+    <p>
+        Part Three: Training Needs and Promotability —
+        {{ appraisal.employee.get_full_name }}
+        &mdash; {{ appraisal.cycle.name }}
+    </p>
+</div>
+
+<form method="POST">
+{% csrf_token %}
+
+<!-- ═══ FIELD 15: Training Needs ═══ -->
+<div class="form-section">
+    <div class="form-section-title">Field 15: Training Needs</div>
+    <p class="text-muted" style="font-size:0.82rem;">
+        In completing this section you should take account
+        of any view expressed by the person reported on.
+    </p>
+    {{ form.training_needs|as_crispy_field }}
+    {{ form.training_how_met|as_crispy_field }}
+</div>
+
+<!-- ═══ FIELD 16: Next Job ═══ -->
+<div class="form-section">
+    <div class="form-section-title">Field 16: Next Job</div>
+    <p class="text-muted" style="font-size:0.82rem;">
+        Should this officer be considered during the
+        next year for:
+    </p>
+    {{ form.different_job_same_grade|as_crispy_field }}
+    {{ form.transfer_to_another_cadre|as_crispy_field }}
+    {{ form.next_job_reasons|as_crispy_field }}
+</div>
+
+<!-- ═══ FIELD 17: Promotability ═══ -->
+<div class="form-section">
+    <div class="form-section-title">Field 17: Promotability</div>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            {{ form.promotion_fitness|as_crispy_field }}
+        </div>
+        <div class="col-md-6">
+            {{ form.promotion_to_grade|as_crispy_field }}
+        </div>
+    </div>
+    {{ form.promotion_comment|as_crispy_field }}
+
+    <hr>
+    <p class="text-muted" style="font-size:0.82rem;">
+        <strong>17(b). Special Promotion</strong> —
+        Selection for training grades, grade skipping
+        or promotion into another group or cadre.
+    </p>
+    <div class="row g-3">
+        <div class="col-md-6">
+            {{ form.special_promotion_grade|as_crispy_field }}
+        </div>
+    </div>
+    {{ form.special_promotion_reasons|as_crispy_field }}
+</div>
+
+<!-- ═══ FIELD 18: Long Term Potential ═══ -->
+<div class="form-section">
+    <div class="form-section-title">Field 18: Long Term Potential</div>
+    {{ form.long_term_potential|as_crispy_field }}
+</div>
+
+<!-- ═══ FIELD 19: General Remarks ═══ -->
+<div class="form-section">
+    <div class="form-section-title">Field 19: General Remarks</div>
+    {{ form.general_remarks|as_crispy_field }}
+    <div class="row g-3 mt-2">
+        <div class="col-md-4">
+            {{ form.years_served_under_reporting_officer|as_crispy_field }}
+        </div>
+        <div class="col-md-4">
+            {{ form.reporting_officer_grade|as_crispy_field }}
+        </div>
+        <div class="col-md-4">
+            {{ form.reporting_officer_name|as_crispy_field }}
+        </div>
+    </div>
+</div>
+
+<!-- ═══ STICKY SUBMIT BAR ═══ -->
+<div class="submit-bar">
+    <div class="text-muted" style="font-size:0.82rem;">
+        <i class="bi bi-info-circle me-1"></i>
+        After submitting Part 3, the Countersigning Officer
+        will be notified to fill Part 4.
+    </div>
+    <div class="d-flex gap-2">
+        <button type="submit"
+                name="action"
+                value="draft"
+                class="btn btn-outline-primary">
+            <i class="bi bi-save me-1"></i> Save Draft
+        </button>
+        <button type="submit"
+                name="action"
+                value="submit"
+                class="btn btn-primary"
+                onclick="return confirm(
+                    'Submit Part 3? The Countersigning Officer '
+                    + 'will be notified.'
+                )">
+            <i class="bi bi-send me-1"></i> Submit Part 3
+        </button>
+    </div>
+</div>
+
+</form>
+{% endblock %}

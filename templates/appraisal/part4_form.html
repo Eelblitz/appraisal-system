@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Part 4 — Countersigning Officer{% endblock %}
+{% block page_title %}Part 4 — Countersigning Officer's Report{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-header {
+        background: linear-gradient(135deg, #1a3a5c, #2e6da4);
+        color: white;
+        padding: 20px 25px;
+        border-radius: 10px;
+        margin-bottom: 24px;
+    }
+    .form-section {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        background: white;
+    }
+    .form-section-title {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #1a3a5c;
+        background: #f0f7ff;
+        padding: 6px 12px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        border-left: 3px solid #1a3a5c;
+    }
+    .rating-badge {
+        display: inline-block;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #1a3a5c;
+        color: white;
+        text-align: center;
+        line-height: 28px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        margin-right: 8px;
+    }
+    .submit-bar {
+        position: sticky;
+        bottom: 0;
+        background: white;
+        border-top: 2px solid #1a3a5c;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 50;
+        box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
+        margin-top: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="form-header">
+    <h5>
+        <i class="bi bi-pen me-2"></i>
+        GEN 79 — Annual Performance Evaluation Report
+    </h5>
+    <p>
+        Part Four: Countersigning Officer's Report —
+        {{ appraisal.employee.get_full_name }}
+        &mdash; {{ appraisal.cycle.name }}
+    </p>
+</div>
+
+<!-- Summary of Reporting Officer's Ratings -->
+{% if part_two and aspect_ratings %}
+<div class="form-section">
+    <div class="form-section-title">
+        Summary — Reporting Officer's Aspect Ratings
+        <span class="float-end fw-normal text-muted"
+              style="font-size:0.7rem;text-transform:none;">
+            For reference only
+        </span>
+    </div>
+
+    <div class="row g-2 mb-3">
+        {% for rating in aspect_ratings %}
+        <div class="col-md-6">
+            <div class="d-flex align-items-center p-2 rounded"
+                 style="background:#f8f9fa; font-size:0.83rem;">
+                <span class="rating-badge">{{ rating.rating }}</span>
+                <span>{{ rating.aspect.label }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="d-flex align-items-center gap-2 p-3 rounded"
+         style="background:#e8f4fd; border-left:3px solid #1a3a5c;">
+        <strong>Overall Rating:</strong>
+        <span class="badge bg-primary fs-6">
+            {{ part_two.get_overall_rating_display }}
+        </span>
+    </div>
+</div>
+{% endif %}
+
+<form method="POST">
+{% csrf_token %}
+
+<!-- ═══ FIELD 20: Countersigning Report ═══ -->
+<div class="form-section">
+    <div class="form-section-title">
+        Field 20: Countersigning Officer's Report
+    </div>
+    <p class="text-muted" style="font-size:0.82rem;">
+        You should confirm that you agree with the reporting
+        officer's assessment, or indicate any disagreements.
+        You should also indicate how frequently you have seen
+        the work of the person reported on. Add any further
+        relevant comment including whether any of the
+        assessments in the report have been brought to the
+        attention of the person reported on.
+    </p>
+    {{ form.countersigning_report|as_crispy_field }}
+</div>
+
+<!-- ═══ COUNTERSIGNING OFFICER DETAILS ═══ -->
+<div class="form-section">
+    <div class="form-section-title">
+        Countersigning Officer Details
+    </div>
+    <div class="row g-3">
+        <div class="col-md-4">
+            {{ form.years_served_under_countersigning|as_crispy_field }}
+        </div>
+        <div class="col-md-4">
+            {{ form.countersigning_grade|as_crispy_field }}
+        </div>
+        <div class="col-md-4">
+            {{ form.countersigning_name|as_crispy_field }}
+        </div>
+    </div>
+</div>
+
+<!-- ═══ STICKY SUBMIT BAR ═══ -->
+<div class="submit-bar">
+    <div class="text-muted" style="font-size:0.82rem;">
+        <i class="bi bi-shield-check me-1 text-success"></i>
+        Submitting Part 4 completes the appraisal.
+        The employee will be able to download their PDF.
+    </div>
+    <div class="d-flex gap-2">
+        <button type="submit"
+                name="action"
+                value="draft"
+                class="btn btn-outline-primary">
+            <i class="bi bi-save me-1"></i> Save Draft
+        </button>
+        <button type="submit"
+                name="action"
+                value="submit"
+                class="btn btn-success"
+                onclick="return confirm(
+                    'Submit Part 4 and complete this appraisal? '
+                    + 'This action cannot be undone.'
+                )">
+            <i class="bi bi-check-circle me-1"></i>
+            Complete Appraisal
+        </button>
+    </div>
+</div>
+
+</form>
+{% endblock %}

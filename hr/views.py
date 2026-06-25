@@ -520,3 +520,73 @@ def template_edit(request, pk):
         'button_label': 'Save Changes',
         'template': template
     })
+
+@hr_required
+def aspect_create(request):
+    """
+    HR Admin creates a custom performance aspect
+    specific to their organisation.
+
+    Why can HR create aspects?
+    Different organisations may have evaluation criteria
+    beyond the standard 16 GEN 79 aspects.
+    Example: A hospital might add "Patient Care Quality"
+    A tech agency might add "Digital Literacy"
+
+    Platform defaults (organisation=None) cannot be
+    deleted or created by HR — only edited.
+    Custom aspects (organisation=this_org) are fully
+    owned by the organisation.
+    """
+    organisation = get_user_organisation(request)
+    form = PerformanceAspectForm(request.POST or None)
+
+    if request.method == 'POST':
+        if form.is_valid():
+            aspect = form.save(commit=False)
+            aspect.organisation = organisation
+            aspect.created_by = request.user
+            aspect.save()
+            messages.success(
+                request,
+                f'Aspect "{aspect.label}" created successfully.'
+            )
+            return redirect('hr:aspect_list')
+
+    return render(request, 'hr/aspect_form.html', {
+        'form': form,
+        'title': 'Create Custom Aspect',
+        'button_label': 'Create Aspect',
+    })
+
+
+@hr_required
+def aspect_toggle(request, pk):
+    """
+    Activates or deactivates a performance aspect.
+
+    Platform default aspects (organisation=None):
+    We set is_applicable=False to hide them from
+    this organisation's templates.
+    We do NOT actually modify the platform default —
+    instead we create an organisation-level override.
+
+    Actually for simplicity: we allow toggling
+    is_applicable on any aspect the org can see.
+    HR can reactivate at any time.
+    """
+    from django.db.models import Q
+    organisation = get_user_organisation(request)
+
+    aspect = get_object_or_404(
+        PerformanceAspect,
+        Q(organisation=None) | Q(organisation=organisation),
+        pk=pk
+    )
+
+    aspect.is_applicable = not aspect.is_applicable
+    aspect.save()
+
+    status = 'activated' if aspect.is_applicable else 'deactivated'
+    messages.success(request, f'Aspect "{aspect.label}" {status}.')
+    return redirect('hr:aspect_list')
