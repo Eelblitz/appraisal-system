@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block title %}Countersigning Officer Dashboard{% endblock %}
+{% block page_title %}Countersigning Officer Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- Identity Banner -->
+<div class="content-card mb-4"
+     style="background:linear-gradient(135deg,#1a3a5c,#2e6da4);
+            color:white;">
+    <h5 class="mb-0 fw-bold">
+        {{ request.user.get_full_name }}
+    </h5>
+    <small style="opacity:0.8;">
+        Countersigning Officer — {{ organisation.name }}
+    </small>
+</div>
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="content-card text-center">
+            <i class="bi bi-pen fs-2 text-warning"></i>
+            <h3 class="mt-2 fw-bold text-warning">
+                {{ pending_count }}
+            </h3>
+            <p class="text-muted mb-0">Awaiting Countersignature</p>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="content-card text-center">
+            <i class="bi bi-check-circle fs-2 text-success"></i>
+            <h3 class="mt-2 fw-bold text-success">
+                {{ completed_countersign }}
+            </h3>
+            <p class="text-muted mb-0">Countersigned</p>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Countersigning Table -->
+<div class="content-card">
+    <h6 class="fw-bold mb-3">
+        <i class="bi bi-pen text-warning me-2"></i>
+        Appraisals Awaiting Your Countersignature
+    </h6>
+    {% if pending_countersign %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Employee</th>
+                    <th>Department</th>
+                    <th>Cycle</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for appraisal in pending_countersign %}
+                <tr>
+                    <td class="fw-semibold">
+                        {{ appraisal.employee.get_full_name }}
+                    </td>
+                    <td class="text-muted">
+                        {{ appraisal.employee.profile.department|default:"—" }}
+                    </td>
+                    <td>{{ appraisal.cycle.name }}</td>
+                    <td>
+                        <a href="{% url 'appraisal:part4_form' appraisal.pk %}"
+                           class="btn btn-sm btn-primary">
+                            <i class="bi bi-pen me-1"></i>
+                            Countersign
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-check2-all fs-1 text-success"></i>
+        <h6 class="mt-2">All caught up!</h6>
+        <p>No appraisals are awaiting your countersignature.</p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

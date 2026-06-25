@@ -69,9 +69,9 @@ class PartOne(models.Model):
     qualification = models.TextField(
         help_text='Degree, Diploma, Certificate etc.'
     )
-    date_of_first_appointment = models.DateField()
+    date_of_first_appointment = models.DateField(null=True, blank=True)
     present_substantive_grade = models.CharField(max_length=100)
-    date_appointed_to_grade = models.DateField()
+    date_appointed_to_grade = models.DateField(null=True, blank=True)
     acting_appointment = models.TextField(blank=True)
     courses_undertaken = models.TextField(blank=True)
     days_absent_sick = models.PositiveIntegerField(default=0)

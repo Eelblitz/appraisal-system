@@ -34,11 +34,10 @@ urlpatterns = [
     ),
 
     # Form parts (placeholders for now — built next)
-    path(
-        'part1/<int:pk>/',
-        views.my_appraisals,
-        name='part1_form'
-    ),
+    path('part1/<int:pk>/',
+    views.part1_form,
+    name='part1_form'
+),
     path(
         'part2/<int:pk>/',
         views.my_appraisals,

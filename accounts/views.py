@@ -330,3 +330,102 @@ def user_detail_view(request, pk):
         'profile': profile,
         'appraisals': appraisals,
     })
+
+
+def platform_admin_required(view_func):
+    """
+    Protects views that only Django superusers can access.
+    Used for platform-level user management.
+    """
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('accounts:login')
+        if not request.user.is_superuser:
+            messages.error(request, 'Access denied.')
+            return redirect('core:dashboard')
+        return view_func(request, *args, **kwargs)
+    wrapper.__wrapped__ = view_func
+    return wrapper
+
+
+@login_required
+def platform_user_list(request):
+    """
+    Platform Super Admin sees ALL users across ALL organisations.
+    Can search by name, username, or organisation.
+    Can reset any password.
+    """
+    if not request.user.is_superuser:
+        messages.error(request, 'Access denied.')
+        return redirect('core:dashboard')
+
+    # Search functionality
+    search = request.GET.get('search', '')
+    org_filter = request.GET.get('organisation', '')
+
+    users = UserProfile.objects.select_related(
+        'user', 'organisation'
+    ).order_by('organisation__name', 'user__last_name')
+
+    if search:
+        users = users.filter(
+            user__first_name__icontains=search
+        ) | users.filter(
+            user__last_name__icontains=search
+        ) | users.filter(
+            user__username__icontains=search
+        )
+
+    if org_filter:
+        users = users.filter(organisation__id=org_filter)
+
+    from organisations.models import Organisation
+    organisations = Organisation.objects.all().order_by('name')
+
+    return render(request, 'accounts/platform_user_list.html', {
+        'users': users,
+        'organisations': organisations,
+        'search': search,
+        'org_filter': org_filter,
+        'total_users': users.count(),
+    })
+
+
+@login_required
+def platform_reset_password(request, pk):
+    """
+    Platform Super Admin resets any user's password.
+    This solves the problem of forgotten HR Admin passwords.
+    """
+    if not request.user.is_superuser:
+        messages.error(request, 'Access denied.')
+        return redirect('core:dashboard')
+
+    target_user = get_object_or_404(User, pk=pk)
+
+    if request.method == 'POST':
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+
+        if not new_password:
+            messages.error(request, 'Password cannot be empty.')
+        elif new_password != confirm_password:
+            messages.error(request, 'Passwords do not match.')
+        elif len(new_password) < 8:
+            messages.error(
+                request,
+                'Password must be at least 8 characters.'
+            )
+        else:
+            target_user.set_password(new_password)
+            target_user.save()
+            messages.success(
+                request,
+                f'Password for {target_user.get_full_name()} '
+                f'reset successfully.'
+            )
+            return redirect('accounts:platform_user_list')
+
+    return render(request, 'accounts/platform_reset_password.html', {
+        'target_user': target_user,
+    })

@@ -1,11 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.utils import timezone
 from .models import Appraisal, PartOne, PartTwo, PartThree, PartFour
 from hr.models import AppraisalCycle, AppraisalTemplate
 from accounts.models import UserProfile
+from .forms import PartOneForm
 
 
 # ─────────────────────────────────────────────────────
@@ -13,10 +13,6 @@ from accounts.models import UserProfile
 # ─────────────────────────────────────────────────────
 
 def get_user_organisation(request):
-    """
-    Returns the organisation of the logged-in user.
-    Called at the start of every view for data isolation.
-    """
     try:
         return request.user.profile.organisation
     except UserProfile.DoesNotExist:
@@ -62,43 +58,18 @@ def appraisal_login_required(view_func):
 
 @hr_required
 def assign_appraisals(request):
-    """
-    HR Admin assigns appraisals in bulk by category.
-
-    The flow:
-    Step 1 (GET):
-        Show form to select cycle and template
-        Show all employees grouped by their category
-
-    Step 2 (POST):
-        Read selected employee IDs from form
-        Create one Appraisal record per selected employee
-        Skip any already assigned to this cycle
-        Report results to HR Admin
-
-    Why bulk by category?
-    Government ministries have many employees.
-    Assigning one at a time would take hours.
-    Bulk assignment by category saves time and
-    reduces the chance of missing someone.
-    """
     organisation = get_user_organisation(request)
 
-    # Only active cycles can receive new appraisal assignments
-    # Draft cycles are not ready, closed cycles are finished
     cycles = AppraisalCycle.objects.filter(
         organisation=organisation,
         status='active'
     ).order_by('-year')
 
-    # All templates in this organisation
     templates = AppraisalTemplate.objects.filter(
         organisation=organisation,
         is_active=True
     ).select_related('cycle')
 
-    # Get all employees in this organisation
-    # We group them by category in the template
     employees = UserProfile.objects.filter(
         organisation=organisation,
         role='employee'
@@ -110,13 +81,8 @@ def assign_appraisals(request):
     if request.method == 'POST':
         cycle_id = request.POST.get('cycle')
         template_id = request.POST.get('template')
-
-        # getlist gets ALL checked checkbox values
-        # When HR ticks multiple employees, each checkbox
-        # sends its value — getlist collects them all into a list
         selected_employee_ids = request.POST.getlist('employees')
 
-        # Validate required fields
         if not cycle_id or not template_id:
             messages.error(
                 request,
@@ -131,8 +97,6 @@ def assign_appraisals(request):
             )
             return redirect('appraisal:assign_appraisals')
 
-        # Fetch selected cycle and template
-        # Both must belong to THIS organisation — security filter
         cycle = get_object_or_404(
             AppraisalCycle,
             pk=cycle_id,
@@ -144,7 +108,6 @@ def assign_appraisals(request):
             organisation=organisation
         )
 
-        # Validate template belongs to selected cycle
         if template.cycle != cycle:
             messages.error(
                 request,
@@ -153,24 +116,15 @@ def assign_appraisals(request):
             )
             return redirect('appraisal:assign_appraisals')
 
-        # Process each selected employee
         created_count = 0
         skipped_count = 0
 
         for employee_id in selected_employee_ids:
             try:
-                # Get the User object for this employee
                 employee_user = User.objects.get(
                     pk=employee_id,
-                    profile__organisation=organisation  # security check
+                    profile__organisation=organisation
                 )
-
-                # get_or_create is the safe way to do this:
-                # If appraisal already exists for this employee+cycle,
-                # it returns the existing one with created=False
-                # If it does not exist, it creates a new one
-                # with created=True
-                # This prevents duplicate appraisals
                 appraisal, created = Appraisal.objects.get_or_create(
                     employee=employee_user,
                     cycle=cycle,
@@ -180,17 +134,13 @@ def assign_appraisals(request):
                         'status': 'pending',
                     }
                 )
-
                 if created:
                     created_count += 1
                 else:
                     skipped_count += 1
-
             except User.DoesNotExist:
-                # If employee ID is invalid or from another org, skip
                 continue
 
-        # Build a clear result message for HR Admin
         if created_count > 0:
             msg = f'{created_count} appraisal(s) assigned successfully.'
             if skipped_count > 0:
@@ -218,10 +168,6 @@ def assign_appraisals(request):
 
 @hr_required
 def appraisal_list_hr(request):
-    """
-    HR Admin sees ALL appraisals in their organisation.
-    Can filter by cycle and status.
-    """
     organisation = get_user_organisation(request)
 
     appraisals = Appraisal.objects.filter(
@@ -230,17 +176,14 @@ def appraisal_list_hr(request):
         'employee', 'cycle', 'template'
     ).order_by('-created_at')
 
-    # Filter by cycle if HR selects one
     cycle_filter = request.GET.get('cycle')
     if cycle_filter:
         appraisals = appraisals.filter(cycle__id=cycle_filter)
 
-    # Filter by status if HR selects one
     status_filter = request.GET.get('status')
     if status_filter:
         appraisals = appraisals.filter(status=status_filter)
 
-    # Available cycles for the filter dropdown
     cycles = AppraisalCycle.objects.filter(
         organisation=organisation
     ).order_by('-year')
@@ -260,13 +203,6 @@ def appraisal_list_hr(request):
 
 @appraisal_login_required
 def my_appraisals(request):
-    """
-    Employee sees ONLY their own appraisals.
-
-    The filter employee=request.user ensures an employee
-    can never see another employee's appraisals.
-    Combined with organisation filter for extra security.
-    """
     organisation = get_user_organisation(request)
 
     appraisals = Appraisal.objects.filter(
@@ -281,21 +217,10 @@ def my_appraisals(request):
 
 @appraisal_login_required
 def appraisal_detail(request, pk):
-    """
-    Shows full details of one appraisal.
-    Different roles see different information:
-
-    Employee → sees Part 1 status, overall progress
-    Reporting Officer → sees Part 1, can access Part 2/3
-    Countersigning Officer → sees Parts 1-3, can access Part 4
-    HR Admin → sees everything
-    """
     organisation = get_user_organisation(request)
     user_role = request.user.profile.role
 
-    # Build the base query — who can see this appraisal?
     if user_role == 'employee':
-        # Employees can only see their own appraisal
         appraisal = get_object_or_404(
             Appraisal,
             pk=pk,
@@ -303,7 +228,6 @@ def appraisal_detail(request, pk):
             organisation=organisation
         )
     elif user_role == 'reporting_officer':
-        # Reporting officer sees appraisals of their subordinates
         appraisal = get_object_or_404(
             Appraisal,
             pk=pk,
@@ -318,14 +242,12 @@ def appraisal_detail(request, pk):
             employee__profile__countersigning_officer=request.user.profile
         )
     else:
-        # HR Admin and Super Admin see all appraisals
         appraisal = get_object_or_404(
             Appraisal,
             pk=pk,
             organisation=organisation
         )
 
-    # Check which parts exist already
     has_part1 = hasattr(appraisal, 'part_one')
     has_part2 = hasattr(appraisal, 'part_two')
     has_part3 = hasattr(appraisal, 'part_three')
@@ -343,16 +265,6 @@ def appraisal_detail(request, pk):
 
 @appraisal_login_required
 def team_appraisals(request):
-    """
-    Reporting Officers and Countersigning Officers see
-    appraisals of their team members.
-
-    Reporting Officer sees:
-        Employees where reporting_officer = their profile
-
-    Countersigning Officer sees:
-        Employees where countersigning_officer = their profile
-    """
     organisation = get_user_organisation(request)
     user_role = request.user.profile.role
 
@@ -374,11 +286,115 @@ def team_appraisals(request):
         ).select_related('employee', 'cycle').order_by('-created_at')
 
     else:
-        # Regular employees should not access team appraisals
         messages.error(request, 'Access denied.')
         return redirect('core:dashboard')
 
     return render(request, 'appraisal/team_appraisals.html', {
         'appraisals': appraisals,
         'user_role': user_role,
+    })
+
+
+# ═══════════════════════════════════════════════════════
+# PART 1 VIEW — Employee fills personal records
+# ═══════════════════════════════════════════════════════
+
+@appraisal_login_required
+def part1_form(request, pk):
+    """
+    The employee fills Part 1 of the GEN 79 form.
+
+    Three behaviours:
+    1. PRE-FILL fields 1-3 from UserProfile (read-only)
+    2. DRAFT SAVING — employee can save and return later
+    3. FINAL SUBMISSION — locks form, notifies reporting officer
+    """
+    organisation = get_user_organisation(request)
+
+    # Security: employee can only access their OWN appraisal
+    appraisal = get_object_or_404(
+        Appraisal,
+        pk=pk,
+        employee=request.user,
+        organisation=organisation
+    )
+
+    # If already submitted, redirect to detail view
+    if appraisal.status != 'pending':
+        messages.info(
+            request,
+            'Part 1 has already been submitted and cannot be edited.'
+        )
+        return redirect('appraisal:detail', pk=appraisal.pk)
+
+    # Try to get existing draft — do NOT save anything on GET
+    # Creating in the database only happens when employee saves
+    try:
+        part_one = PartOne.objects.get(appraisal=appraisal)
+    except PartOne.DoesNotExist:
+        # Create Python object in memory only — not saved to DB yet
+        part_one = PartOne(appraisal=appraisal)
+
+    # Get profile for pre-filling fields 1-3
+    profile = request.user.profile
+
+    # Which button did the employee click?
+    action = request.POST.get('action', 'draft')
+    is_submitting = (action == 'submit')
+
+    form = PartOneForm(
+        request.POST or None,
+        instance=part_one
+    )
+
+    # Tell the form whether this is final submission
+    # so it knows whether to enforce required field validation
+    form.is_submitting = is_submitting
+
+    if request.method == 'POST':
+        if form.is_valid():
+            part_one = form.save(commit=False)
+            part_one.appraisal = appraisal
+
+            if is_submitting:
+                # Final submission — lock the form
+                part_one.is_draft = False
+                part_one.submitted_at = timezone.now()
+                part_one.save()
+
+                # Advance appraisal status to unlock Part 2
+                appraisal.status = 'part1_submitted'
+                appraisal.part1_submitted_at = timezone.now()
+                appraisal.save()
+
+                messages.success(
+                    request,
+                    'Part 1 submitted successfully. '
+                    'Your Reporting Officer has been notified.'
+                )
+                return redirect('appraisal:detail', pk=appraisal.pk)
+
+            else:
+                # Draft save — keep editable
+                part_one.is_draft = True
+                part_one.save()
+
+                messages.success(
+                    request,
+                    'Draft saved. You can continue later.'
+                )
+                return redirect('appraisal:part1_form', pk=appraisal.pk)
+
+        else:
+            messages.error(
+                request,
+                'Please correct the errors below before submitting.'
+            )
+
+    return render(request, 'appraisal/part1_form.html', {
+        'form': form,
+        'appraisal': appraisal,
+        'profile': profile,
+        'part_one': part_one,
+        'is_draft': part_one.is_draft,
     })

@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% block title %}Platform Dashboard{% endblock %}
+{% block page_title %}Platform Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h4>Platform Overview</h4>
+    <p>Code With Iman — Appraisal Management Platform</p>
+</div>
+
+<!-- Platform Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="content-card text-center">
+            <i class="bi bi-building fs-2 text-primary"></i>
+            <h3 class="mt-2 fw-bold text-primary">
+                {{ total_organisations }}
+            </h3>
+            <p class="text-muted mb-0">Total Organisations</p>
+            <small class="text-success">
+                {{ active_organisations }} active
+            </small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="content-card text-center">
+            <i class="bi bi-people-fill fs-2 text-info"></i>
+            <h3 class="mt-2 fw-bold text-info">{{ total_users }}</h3>
+            <p class="text-muted mb-0">Total Users</p>
+            <small class="text-muted">across all organisations</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="content-card text-center">
+            <i class="bi bi-file-earmark-text fs-2 text-warning"></i>
+            <h3 class="mt-2 fw-bold text-warning">
+                {{ total_appraisals }}
+            </h3>
+            <p class="text-muted mb-0">Total Appraisals</p>
+            <small class="text-muted">all time</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="content-card text-center">
+            <i class="bi bi-cash-stack fs-2 text-success"></i>
+            <h3 class="mt-2 fw-bold text-success">
+                ₦{{ platform_revenue|floatformat:2 }}
+            </h3>
+            <p class="text-muted mb-0">Platform Revenue</p>
+            <small class="text-muted">from PDF downloads</small>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+
+    <!-- Quick Actions -->
+    <div class="col-md-4">
+        <div class="content-card">
+            <h6 class="fw-bold mb-3">
+                <i class="bi bi-lightning-charge text-warning me-2"></i>
+                Quick Actions
+            </h6>
+            <div class="d-grid gap-2">
+                <a href="{% url 'organisations:organisation_create' %}"
+                   class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    Onboard New Organisation
+                </a>
+                <a href="{% url 'accounts:platform_user_list' %}"
+                   class="btn btn-outline-primary">
+                    <i class="bi bi-people me-2"></i>
+                    Manage All Users
+                </a>
+                <a href="{% url 'organisations:organisation_list' %}"
+                   class="btn btn-outline-secondary">
+                    <i class="bi bi-building me-2"></i>
+                    View All Organisations
+                </a>
+                <a href="{% url 'appraisal:appraisal_list_hr' %}"
+                   class="btn btn-outline-secondary">
+                    <i class="bi bi-file-earmark-text me-2"></i>
+                    View All Appraisals
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Organisations -->
+    <div class="col-md-8">
+        <div class="content-card">
+            <div class="d-flex justify-content-between
+                        align-items-center mb-3">
+                <h6 class="fw-bold mb-0">
+                    <i class="bi bi-building text-primary me-2"></i>
+                    Organisations
+                </h6>
+                <a href="{% url 'organisations:organisation_list' %}"
+                   class="btn btn-sm btn-outline-primary">
+                    View All
+                </a>
+            </div>
+            {% if organisations %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Organisation</th>
+                            <th>Platform %</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for org in organisations %}
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">
+                                    {{ org.name }}
+                                </div>
+                                <small class="text-muted">
+                                    {{ org.acronym }}
+                                </small>
+                            </td>
+                            <td>
+                                <span class="badge bg-info text-dark">
+                                    {{ org.subscription_percentage }}%
+                                </span>
+                            </td>
+                            <td>
+                                {% if org.is_active %}
+                                    <span class="badge bg-success">
+                                        Active
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-danger">
+                                        Inactive
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'organisations:organisation_edit' org.pk %}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4 text-muted">
+                <i class="bi bi-building fs-2"></i>
+                <p class="mt-2">No organisations yet.</p>
+                <a href="{% url 'organisations:organisation_create' %}"
+                   class="btn btn-primary btn-sm">
+                    Onboard First Organisation
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% block title %}All Users — Platform Admin{% endblock %}
+{% block page_title %}All Users{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h4>All Users</h4>
+    <p>Manage users across all organisations</p>
+</div>
+
+<!-- Search and Filter -->
+<div class="content-card mb-3">
+    <form method="GET" class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">Search</label>
+            <input type="text"
+                   name="search"
+                   class="form-control form-control-sm"
+                   placeholder="Name or username..."
+                   value="{{ search }}">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-semibold">
+                Filter by Organisation
+            </label>
+            <select name="organisation"
+                    class="form-select form-select-sm">
+                <option value="">All Organisations</option>
+                {% for org in organisations %}
+                <option value="{{ org.pk }}"
+                    {% if org_filter == org.pk|stringformat:"s" %}
+                        selected
+                    {% endif %}>
+                    {{ org.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit"
+                    class="btn btn-outline-primary btn-sm w-100">
+                <i class="bi bi-search me-1"></i> Search
+            </button>
+        </div>
+        <div class="col-md-2">
+            <a href="{% url 'accounts:platform_user_list' %}"
+               class="btn btn-outline-secondary btn-sm w-100">
+                Clear
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="content-card">
+    <div class="mb-2 text-muted" style="font-size:0.82rem;">
+        {{ total_users }} user(s) found
+    </div>
+    {% if users %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Name</th>
+                    <th>Username</th>
+                    <th>Organisation</th>
+                    <th>Role</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for profile in users %}
+                <tr>
+                    <td>
+                        <div class="fw-semibold">
+                            {{ profile.user.get_full_name|default:profile.user.username }}
+                        </div>
+                        <small class="text-muted">
+                            {{ profile.user.email }}
+                        </small>
+                    </td>
+                    <td class="text-muted">
+                        {{ profile.user.username }}
+                    </td>
+                    <td>
+                        {% if profile.organisation %}
+                            <span class="badge bg-secondary">
+                                {{ profile.organisation.acronym|default:profile.organisation.name }}
+                            </span>
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if profile.user.is_superuser %}
+                            <span class="badge bg-dark">
+                                Platform Admin
+                            </span>
+                        {% elif profile.role == 'hr_admin' %}
+                            <span class="badge bg-danger">HR Admin</span>
+                        {% elif profile.role == 'super_admin' %}
+                            <span class="badge bg-warning text-dark">
+                                Org Admin
+                            </span>
+                        {% elif profile.role == 'reporting_officer' %}
+                            <span class="badge bg-info text-dark">
+                                Reporting Officer
+                            </span>
+                        {% elif profile.role == 'countersigning_officer' %}
+                            <span class="badge bg-primary">
+                                Countersigning Officer
+                            </span>
+                        {% else %}
+                            <span class="badge bg-success">Employee</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'accounts:platform_reset_password' profile.user.pk %}"
+                           class="btn btn-sm btn-outline-warning"
+                           title="Reset Password">
+                            <i class="bi bi-key"></i> Reset Password
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-4 text-muted">
+        <i class="bi bi-people fs-2"></i>
+        <p class="mt-2">No users found.</p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

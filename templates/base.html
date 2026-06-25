@@ -188,90 +188,115 @@
 
     <nav class="sidebar-nav">
 
-        <div class="nav-section-label">Main Menu</div>
+    <!-- ── MAIN MENU (all users) ── -->
+    <div class="nav-section-label">Main Menu</div>
 
-<a href="{% url 'core:dashboard' %}"
-   class="nav-link-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-    <i class="bi bi-speedometer2"></i> Dashboard
-</a>
+    <a href="{% url 'core:dashboard' %}"
+       class="nav-link-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+        <i class="bi bi-speedometer2"></i> Dashboard
+    </a>
 
-{% if request.user.is_superuser %}
-<div class="nav-section-label">Platform Admin</div>
+    {% if not request.user.is_superuser %}
+    <a href="{% url 'accounts:profile' %}"
+       class="nav-link-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+        <i class="bi bi-person-circle"></i> My Profile
+    </a>
+    {% endif %}
 
-<a href="{% url 'organisations:organisation_list' %}"
-   class="nav-link-item {% if request.resolver_match.url_name == 'organisation_list' %}active{% endif %}">
-    <i class="bi bi-building"></i> Organisations
-</a>
-{% endif %}
+    <!-- ── PLATFORM ADMIN (Django superuser only) ── -->
+    {% if request.user.is_superuser %}
+    <div class="nav-section-label">Platform Admin</div>
 
-<a href="{% url 'accounts:profile' %}"
-   class="nav-link-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
-    <i class="bi bi-person-circle"></i> My Profile
-</a>
+    <a href="{% url 'organisations:organisation_list' %}"
+       class="nav-link-item {% if request.resolver_match.url_name == 'organisation_list' %}active{% endif %}">
+        <i class="bi bi-building"></i> Organisations
+    </a>
 
-        <div class="nav-section-label">Appraisal</div>
+    <a href="{% url 'accounts:platform_user_list' %}"
+       class="nav-link-item {% if request.resolver_match.url_name == 'platform_user_list' %}active{% endif %}">
+        <i class="bi bi-people-fill"></i> All Users
+    </a>
 
-        <a href="{% url 'appraisal:my_appraisals' %}"
-           class="nav-link-item {% if request.resolver_match.url_name == 'my_appraisals' %}active{% endif %}">
-            <i class="bi bi-file-earmark-text"></i> My Appraisals
-        </a>
+    <a href="{% url 'appraisal:appraisal_list_hr' %}"
+       class="nav-link-item {% if request.resolver_match.url_name == 'appraisal_list_hr' %}active{% endif %}">
+        <i class="bi bi-file-earmark-text"></i> All Appraisals
+    </a>
 
-        {% if request.user.profile.role in 'reporting_officer,countersigning_officer,hr_admin,super_admin' %}
-        <a href="{% url 'appraisal:team_appraisals' %}"
-           class="nav-link-item {% if request.resolver_match.url_name == 'team_appraisals' %}active{% endif %}">
-            <i class="bi bi-people"></i> Team Appraisals
-        </a>
-        {% endif %}
+    {% endif %}
 
-        {% if request.user.profile.role in 'hr_admin,super_admin' %}
-        <div class="nav-section-label">HR Tools</div>
+    <!-- ── HR TOOLS (hr_admin and org super_admin) ── -->
+    {% if not request.user.is_superuser and request.user.profile.role in 'hr_admin,super_admin' %}
+    <div class="nav-section-label">HR Tools</div>
 
-        <a href="{% url 'hr:cycle_list' %}"
-           class="nav-link-item {% if request.resolver_match.url_name == 'cycle_list' %}active{% endif %}">
-            <i class="bi bi-arrow-repeat"></i> Appraisal Cycles
-        </a>
+    <a href="{% url 'appraisal:assign_appraisals' %}"
+       class="nav-link-item {% if request.resolver_match.url_name == 'assign_appraisals' %}active{% endif %}">
+        <i class="bi bi-person-check"></i> Assign Appraisals
+    </a>
 
-        <a href="{% url 'hr:category_list' %}"
-           class="nav-link-item {% if request.resolver_match.url_name == 'category_list' %}active{% endif %}">
-            <i class="bi bi-tags"></i> Categories
-        </a>
+    <a href="{% url 'appraisal:appraisal_list_hr' %}"
+       class="nav-link-item {% if request.resolver_match.url_name == 'appraisal_list_hr' %}active{% endif %}">
+        <i class="bi bi-file-earmark-text"></i> All Appraisals
+    </a>
 
-        <a href="{% url 'hr:template_list' %}"
-           class="nav-link-item {% if request.resolver_match.url_name == 'template_list' %}active{% endif %}">
-            <i class="bi bi-layout-text-window"></i> Templates
-        </a>
+    <a href="{% url 'hr:cycle_list' %}"
+       class="nav-link-item {% if request.resolver_match.url_name == 'cycle_list' %}active{% endif %}">
+        <i class="bi bi-arrow-repeat"></i> Appraisal Cycles
+    </a>
 
-        <a href="{% url 'hr:aspect_list' %}"
-           class="nav-link-item {% if request.resolver_match.url_name == 'aspect_list' %}active{% endif %}">
-            <i class="bi bi-list-check"></i> Performance Aspects
-        </a>
+    <a href="{% url 'hr:category_list' %}"
+       class="nav-link-item {% if request.resolver_match.url_name == 'category_list' %}active{% endif %}">
+        <i class="bi bi-tags"></i> Categories
+    </a>
 
-        <a href="{% url 'appraisal:assign_appraisals' %}"
-           class="nav-link-item {% if request.resolver_match.url_name == 'assign_appraisals' %}active{% endif %}">
-            <i class="bi bi-person-check"></i> Assign Appraisals
-        </a>
+    <a href="{% url 'hr:template_list' %}"
+       class="nav-link-item {% if request.resolver_match.url_name == 'template_list' %}active{% endif %}">
+        <i class="bi bi-layout-text-window"></i> Templates
+    </a>
 
-        <a href="{% url 'accounts:user_list' %}"
-           class="nav-link-item {% if request.resolver_match.url_name == 'user_list' %}active{% endif %}">
-            <i class="bi bi-people-fill"></i> Manage Users
-        </a>
-        {% endif %}
+    <a href="{% url 'hr:aspect_list' %}"
+       class="nav-link-item {% if request.resolver_match.url_name == 'aspect_list' %}active{% endif %}">
+        <i class="bi bi-list-check"></i> Performance Aspects
+    </a>
 
-        <div class="nav-section-label">Payments</div>
+    <a href="{% url 'accounts:user_list' %}"
+       class="nav-link-item {% if request.resolver_match.url_name == 'user_list' %}active{% endif %}">
+        <i class="bi bi-people-fill"></i> Manage Users
+    </a>
+    {% endif %}
 
-        <a href="{% url 'payments:my_payments' %}"
-           class="nav-link-item {% if request.resolver_match.url_name == 'my_payments' %}active{% endif %}">
-            <i class="bi bi-credit-card"></i> My Payments
-        </a>
+    <!-- ── APPRAISAL (non-superuser, non-hr) ── -->
+    {% if not request.user.is_superuser %}
+    <div class="nav-section-label">Appraisal</div>
 
-        {% if request.user.profile.role in 'hr_admin,super_admin' %}
-        <a href="{% url 'payments:all_payments' %}"
-           class="nav-link-item {% if request.resolver_match.url_name == 'all_payments' %}active{% endif %}">
-            <i class="bi bi-cash-stack"></i> All Payments
-        </a>
-        {% endif %}
+    <a href="{% url 'appraisal:my_appraisals' %}"
+       class="nav-link-item {% if request.resolver_match.url_name == 'my_appraisals' %}active{% endif %}">
+        <i class="bi bi-file-earmark-text"></i> My Appraisals
+    </a>
 
-    </nav>
+    {% if request.user.profile.role in 'reporting_officer,countersigning_officer,hr_admin,super_admin' %}
+    <a href="{% url 'appraisal:team_appraisals' %}"
+       class="nav-link-item {% if request.resolver_match.url_name == 'team_appraisals' %}active{% endif %}">
+        <i class="bi bi-people"></i> Team Appraisals
+    </a>
+    {% endif %}
+
+    <!-- ── PAYMENTS ── -->
+    <div class="nav-section-label">Payments</div>
+
+    <a href="{% url 'payments:my_payments' %}"
+       class="nav-link-item {% if request.resolver_match.url_name == 'my_payments' %}active{% endif %}">
+        <i class="bi bi-credit-card"></i> My Payments
+    </a>
+
+    {% if request.user.profile.role in 'hr_admin,super_admin' %}
+    <a href="{% url 'payments:all_payments' %}"
+       class="nav-link-item {% if request.resolver_match.url_name == 'all_payments' %}active{% endif %}">
+        <i class="bi bi-cash-stack"></i> All Payments
+    </a>
+    {% endif %}
+    {% endif %}
+
+</nav>
 </div>
 
 

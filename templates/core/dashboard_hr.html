@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% block title %}HR Dashboard — {{ organisation.name }}{% endblock %}
+{% block page_title %}HR Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- Organisation Identity Banner -->
+<div class="d-flex align-items-center gap-3 mb-4 p-3 rounded"
+     style="background: linear-gradient(135deg, #1a3a5c, #2e6da4);
+            color: white;">
+    {% if organisation.logo %}
+    <img src="{{ organisation.logo.url }}"
+         height="45"
+         style="border-radius:6px; object-fit:contain;"
+         alt="Logo">
+    {% else %}
+    <div class="user-avatar"
+         style="width:45px;height:45px;font-size:1.1rem;">
+        {{ organisation.name|first|upper }}
+    </div>
+    {% endif %}
+    <div>
+        <h5 class="mb-0 fw-bold">{{ organisation.name }}</h5>
+        <small style="opacity:0.8;">
+            {{ profile.get_role_display }}
+            &mdash;
+            {{ request.user.get_full_name }}
+        </small>
+    </div>
+</div>
+
+<!-- Organisation Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="content-card text-center">
+            <i class="bi bi-people-fill fs-2 text-primary"></i>
+            <h3 class="mt-2 fw-bold text-primary">{{ total_staff }}</h3>
+            <p class="text-muted mb-0">Total Staff</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="content-card text-center">
+            <i class="bi bi-file-earmark-text fs-2 text-info"></i>
+            <h3 class="mt-2 fw-bold text-info">
+                {{ total_appraisals }}
+            </h3>
+            <p class="text-muted mb-0">Total Appraisals</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="content-card text-center">
+            <i class="bi bi-hourglass-split fs-2 text-warning"></i>
+            <h3 class="mt-2 fw-bold text-warning">{{ in_progress }}</h3>
+            <p class="text-muted mb-0">In Progress</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="content-card text-center">
+            <i class="bi bi-check-circle fs-2 text-success"></i>
+            <h3 class="mt-2 fw-bold text-success">
+                {{ completed_appraisals }}
+            </h3>
+            <p class="text-muted mb-0">Completed</p>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+
+    <!-- Quick Actions -->
+    <div class="col-md-4">
+        <div class="content-card">
+            <h6 class="fw-bold mb-3">
+                <i class="bi bi-lightning-charge text-warning me-2"></i>
+                Quick Actions
+            </h6>
+            <div class="d-grid gap-2">
+                <a href="{% url 'appraisal:assign_appraisals' %}"
+                   class="btn btn-primary">
+                    <i class="bi bi-person-check me-2"></i>
+                    Assign Appraisals
+                </a>
+                <a href="{% url 'accounts:create_user' %}"
+                   class="btn btn-outline-primary">
+                    <i class="bi bi-person-plus me-2"></i>
+                    Create Staff Account
+                </a>
+                <a href="{% url 'hr:cycle_create' %}"
+                   class="btn btn-outline-primary">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    Create Appraisal Cycle
+                </a>
+                <a href="{% url 'accounts:user_list' %}"
+                   class="btn btn-outline-secondary">
+                    <i class="bi bi-people me-2"></i>
+                    Manage Staff
+                </a>
+            </div>
+
+            <!-- Active Cycles -->
+            {% if active_cycles %}
+            <hr>
+            <h6 class="fw-bold mb-2" style="font-size:0.85rem;">
+                Active Cycles
+            </h6>
+            {% for cycle in active_cycles %}
+            <div class="p-2 rounded mb-1"
+                 style="background:#f0fff4;
+                        border-left:3px solid #28a745;
+                        font-size:0.82rem;">
+                <div class="fw-semibold">{{ cycle.name }}</div>
+                <small class="text-muted">
+                    Fee: ₦{{ cycle.download_fee }}
+                </small>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Appraisals -->
+    <div class="col-md-8">
+        <div class="content-card">
+            <div class="d-flex justify-content-between
+                        align-items-center mb-3">
+                <h6 class="fw-bold mb-0">
+                    <i class="bi bi-clock-history text-primary me-2"></i>
+                    Recent Activity
+                </h6>
+                <a href="{% url 'appraisal:appraisal_list_hr' %}"
+                   class="btn btn-sm btn-outline-primary">
+                    View All
+                </a>
+            </div>
+            {% if recent_appraisals %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Employee</th>
+                            <th>Cycle</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appraisal in recent_appraisals %}
+                        <tr>
+                            <td class="fw-semibold">
+                                {{ appraisal.employee.get_full_name }}
+                            </td>
+                            <td class="text-muted"
+                                style="font-size:0.82rem;">
+                                {{ appraisal.cycle.name }}
+                            </td>
+                            <td>
+                                {% if appraisal.status == 'pending' %}
+                                    <span class="badge bg-secondary">
+                                        Pending
+                                    </span>
+                                {% elif appraisal.status == 'part1_submitted' %}
+                                    <span class="badge bg-info text-dark">
+                                        Part 1 Done
+                                    </span>
+                                {% elif appraisal.status == 'closed' %}
+                                    <span class="badge bg-success">
+                                        Closed
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-primary">
+                                        In Progress
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted"
+                                style="font-size:0.82rem;">
+                                {{ appraisal.created_at|date:"d M Y" }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4 text-muted">
+                <i class="bi bi-inbox fs-2"></i>
+                <p class="mt-2">No appraisals yet.</p>
+                <a href="{% url 'appraisal:assign_appraisals' %}"
+                   class="btn btn-primary btn-sm">
+                    Assign First Appraisal
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
