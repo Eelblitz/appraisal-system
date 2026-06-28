@@ -1,0 +1,141 @@
+# PROPRIETARY SOFTWARE LICENSE
+
+Copyright (c) 2026 Code With Iman
+CAC Business Name Registration No. 9631094
+Lafia, Nasarawa State, Federal Republic of Nigeria
+
+All rights reserved.
+
+================================================================================
+TERMS AND CONDITIONS
+================================================================================
+
+1. DEFINITIONS
+
+   "Software" refers to the Annual Performance Evaluation System, including all
+   source code, documentation, assets, configurations, and related materials
+   contained in this repository.
+
+   "Owner" refers to Code With Iman, a registered business under the Companies
+   and Allied Matters Act 2020, CAC Registration No. 9631094.
+
+   "User" refers to any individual, organisation, or entity accessing, viewing,
+   or using the Software.
+
+   "Client Organisation" refers to any ministry, department, or agency that has
+   entered into a valid subscription agreement with the Owner.
+
+2. GRANT OF RIGHTS
+
+   2.1 The Owner grants Client Organisations a limited, non-exclusive,
+       non-transferable right to USE the Software as a hosted service (SaaS)
+       strictly in accordance with the subscription agreement.
+
+   2.2 Authorised developers employed by or contracted to the Owner may view,
+       modify, and contribute to the Software solely for the purpose of
+       maintaining and improving the Software on behalf of the Owner.
+
+3. RESTRICTIONS
+
+   The following are strictly prohibited without prior written consent from
+   the Owner:
+
+   3.1 Copying, reproducing, or duplicating the Software or any portion thereof.
+
+   3.2 Modifying, adapting, translating, or creating derivative works based on
+       the Software.
+
+   3.3 Distributing, selling, sublicensing, renting, leasing, or transferring
+       the Software or any rights to it.
+
+   3.4 Reverse engineering, decompiling, disassembling, or otherwise attempting
+       to derive the source code of the Software.
+
+   3.5 Removing, altering, or obscuring any proprietary notices, labels, or
+       marks on the Software.
+
+   3.6 Using the Software to build a competing product or service.
+
+   3.7 Deploying the Software as your own product without a valid reseller
+       agreement with the Owner.
+
+4. INTELLECTUAL PROPERTY
+
+   4.1 The Software and all copies thereof are proprietary to the Owner and
+       title thereto remains with the Owner.
+
+   4.2 All rights in the Software not specifically granted in this License are
+       reserved to the Owner.
+
+   4.3 The GEN 79 Annual Performance Evaluation form structure is a Nigerian
+       government public document. The implementation, code, design, and
+       business logic of this Software are the exclusive intellectual property
+       of the Owner.
+
+5. CLIENT ORGANISATION DATA
+
+   5.1 Data entered into the Software by Client Organisations remains the
+       property of those organisations.
+
+   5.2 The Owner commits to maintaining the confidentiality of all data
+       processed by the Software.
+
+   5.3 Data isolation between organisations is enforced at the application
+       level. Each Client Organisation can only access their own data.
+
+6. DISCLAIMER OF WARRANTIES
+
+   THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+
+   THE OWNER DOES NOT WARRANT THAT THE SOFTWARE WILL BE ERROR-FREE OR THAT
+   OPERATION OF THE SOFTWARE WILL BE UNINTERRUPTED.
+
+7. LIMITATION OF LIABILITY
+
+   IN NO EVENT SHALL THE OWNER BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+   EXEMPLARY, OR CONSEQUENTIAL DAMAGES ARISING OUT OF OR IN CONNECTION WITH THE
+   USE OR INABILITY TO USE THE SOFTWARE, EVEN IF THE OWNER HAS BEEN ADVISED OF
+   THE POSSIBILITY OF SUCH DAMAGES.
+
+   THE OWNER'S TOTAL LIABILITY SHALL NOT EXCEED THE AMOUNT PAID BY THE CLIENT
+   ORGANISATION IN THE TWELVE (12) MONTHS PRECEDING THE CLAIM.
+
+8. TERMINATION
+
+   8.1 This License is effective until terminated.
+
+   8.2 The Owner may terminate this License immediately upon written notice if
+       a User or Client Organisation breaches any provision of this License.
+
+   8.3 Upon termination, all rights granted under this License cease immediately
+       and the User must destroy all copies of the Software in their possession.
+
+9. GOVERNING LAW
+
+   This License shall be governed by and construed in accordance with the laws
+   of the Federal Republic of Nigeria. Any disputes arising from this License
+   shall be subject to the exclusive jurisdiction of the courts of Nasarawa
+   State, Nigeria.
+
+10. CONTACT FOR PERMISSIONS
+
+    For licensing inquiries, permissions, or partnership discussions:
+
+    Code With Iman
+    No. 3, Hospital Road
+    beside Federal University Teaching Hospital
+    Lafia, Nasarawa State
+    Federal Republic of Nigeria
+
+    CAC Registration: 9631094
+    TIN: 2622591309579
+    GitHub: https://github.com/Eelblitz
+
+================================================================================
+
+By accessing or using this Software, you acknowledge that you have read,
+understood, and agree to be bound by the terms of this License.
+
+================================================================================
