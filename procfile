@@ -1,0 +1,1 @@
+web: gunicorn appraisal_project.wsgi:application

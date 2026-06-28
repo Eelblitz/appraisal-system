@@ -6,6 +6,9 @@ from appraisal.models import Appraisal
 from hr.models import AppraisalCycle
 from organisations.models import Organisation
 from payments.models import Payment
+import os
+from django.http import FileResponse, Http404
+
 
 
 @login_required
@@ -186,22 +189,62 @@ def dashboard_view(request):
             organisation=organisation
         ).select_related('cycle').order_by('-created_at')
 
-        # Current active appraisal — the one they need to act on
-        active_appraisal = my_appraisals.filter(
-            status='pending'
-        ).first()
-
+        # Count appraisals that need employee attention
+        needs_action = my_appraisals.filter(
+            status__in=['pending', 'completed']
+        ).count()
+        
+        # Count in-progress (waiting for officers)
+        in_progress_count = my_appraisals.filter(
+            status__in=['part1_submitted'
+                       'part2_submitted', 
+                       'part3_submitted'
+                    ]
+        ).count()
+        
         context.update({
             'organisation': organisation,
             'my_appraisals': my_appraisals,
-            'active_appraisal': active_appraisal,
             'total_appraisals': my_appraisals.count(),
-            'completed_appraisals': my_appraisals.filter(
-                status='closed'
+            'in_progress_count': in_progress_count,
+            'completed_appraisals': my_appraisals.filter(status='closed'
             ).count(),
+            'need_action': needs_action,
         })
-        return render(
-            request,
-            'core/dashboard_employee.html',
-            context
-        )
+        return render(request, 'core/dashboard_employee.html', context) 
+    
+    
+
+@login_required
+def download_documentation(request):
+    """
+    Serves the system documentation as a downloadable file.
+    Available to Platform Admin, HR Admin and Super Admin only.
+    Employees and Officers do not need this document.
+    """
+    # Check permission
+    if not request.user.is_superuser:
+        try:
+            role = request.user.profile.role
+            if role not in ['hr_admin', 'super_admin']:
+                messages.error(request, 'Access denied.')
+                return redirect('core:dashboard')
+        except Exception:
+            return redirect('core:dashboard')
+
+    # Path to the documentation file
+    from django.conf import settings
+    doc_path = os.path.join(settings.BASE_DIR, 'docs', 'SYSTEM_DOCUMENTATION.md')
+
+    if not os.path.exists(doc_path):
+        raise Http404('Documentation file not found.')
+
+    # Serve the file as a download
+    response = FileResponse(
+        open(doc_path, 'rb'),
+        content_type='text/markdown'
+    )
+    response['Content-Disposition'] = (
+        'attachment; filename="Annual_Performance_Evaluation_System_Documentation.md"'
+    )
+    return response

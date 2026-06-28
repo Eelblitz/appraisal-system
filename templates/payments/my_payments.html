@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}My Payments{% endblock %}
+{% block page_title %}My Payment History{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h4>My Payments</h4>
+    <p>Your appraisal PDF download payment history</p>
+</div>
+
+<div class="content-card">
+    {% if payments %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Appraisal Cycle</th>
+                    <th>Amount</th>
+                    <th>Reference</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for payment in payments %}
+                <tr>
+                    <td class="fw-semibold">
+                        {{ payment.appraisal.cycle.name }}
+                    </td>
+                    <td>₦{{ payment.amount }}</td>
+                    <td>
+                        <code style="font-size:0.78rem;">
+                            {{ payment.paystack_reference }}
+                        </code>
+                    </td>
+                    <td>
+                        {% if payment.status == 'success' %}
+                            <span class="badge bg-success">Paid</span>
+                        {% elif payment.status == 'pending' %}
+                            <span class="badge bg-warning text-dark">
+                                Pending
+                            </span>
+                        {% elif payment.status == 'failed' %}
+                            <span class="badge bg-danger">Failed</span>
+                        {% else %}
+                            <span class="badge bg-secondary">
+                                {{ payment.status }}
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="text-muted" style="font-size:0.82rem;">
+                        {{ payment.paid_at|date:"d M Y H:i"|default:"—" }}
+                    </td>
+                    <td>
+                        {% if payment.status == 'success' %}
+                            <a href="{% url 'payments:download_pdf' payment.appraisal.pk %}"
+                               class="btn btn-sm btn-success">
+                                <i class="bi bi-download me-1"></i>
+                                Download PDF
+                            </a>
+                        {% elif payment.status == 'failed' %}
+                            <a href="{% url 'payments:initiate' payment.appraisal.pk %}"
+                               class="btn btn-sm btn-outline-primary">
+                                Try Again
+                            </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-credit-card fs-1"></i>
+        <p class="mt-2">No payment history yet.</p>
+        <small>
+            Payments appear here when you download
+            your completed appraisal PDF.
+        </small>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

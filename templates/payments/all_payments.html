@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block title %}All Payments{% endblock %}
+{% block page_title %}Payment Management{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h4>All Payments</h4>
+    <p>Payment history and revenue breakdown for your organisation</p>
+</div>
+
+<!-- Revenue Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="content-card text-center">
+            <i class="bi bi-cash-stack fs-2 text-success"></i>
+            <h3 class="mt-2 fw-bold text-success">
+                ₦{{ total_collected|floatformat:2 }}
+            </h3>
+            <p class="text-muted mb-0">Total Collected</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="content-card text-center">
+            <i class="bi bi-building fs-2 text-primary"></i>
+            <h3 class="mt-2 fw-bold text-primary">
+                ₦{{ org_total|floatformat:2 }}
+            </h3>
+            <p class="text-muted mb-0">Your Organisation's Share</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="content-card text-center">
+            <i class="bi bi-pie-chart fs-2 text-warning"></i>
+            <h3 class="mt-2 fw-bold text-warning">
+                ₦{{ platform_total|floatformat:2 }}
+            </h3>
+            <p class="text-muted mb-0">Platform Fee</p>
+        </div>
+    </div>
+</div>
+
+<div class="content-card">
+    {% if payments %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Employee</th>
+                    <th>Cycle</th>
+                    <th>Amount</th>
+                    <th>Platform Fee</th>
+                    <th>Org Share</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for payment in payments %}
+                <tr>
+                    <td class="fw-semibold">
+                        {{ payment.employee.get_full_name }}
+                    </td>
+                    <td class="text-muted" style="font-size:0.82rem;">
+                        {{ payment.appraisal.cycle.name }}
+                    </td>
+                    <td>₦{{ payment.amount }}</td>
+                    <td class="text-warning">
+                        {% if payment.status == 'success' %}
+                            ₦{{ payment.platform_earning|floatformat:2 }}
+                        {% else %}—{% endif %}
+                    </td>
+                    <td class="text-success">
+                        {% if payment.status == 'success' %}
+                            ₦{{ payment.organisation_earning|floatformat:2 }}
+                        {% else %}—{% endif %}
+                    </td>
+                    <td>
+                        {% if payment.status == 'success' %}
+                            <span class="badge bg-success">Paid</span>
+                        {% elif payment.status == 'pending' %}
+                            <span class="badge bg-warning text-dark">
+                                Pending
+                            </span>
+                        {% elif payment.status == 'failed' %}
+                            <span class="badge bg-danger">Failed</span>
+                        {% else %}
+                            <span class="badge bg-secondary">
+                                {{ payment.status }}
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="text-muted" style="font-size:0.82rem;">
+                        {{ payment.paid_at|date:"d M Y"|default:"—" }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-cash-stack fs-1"></i>
+        <p class="mt-2">No payments yet.</p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

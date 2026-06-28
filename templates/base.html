@@ -262,39 +262,64 @@
        class="nav-link-item {% if request.resolver_match.url_name == 'user_list' %}active{% endif %}">
         <i class="bi bi-people-fill"></i> Manage Users
     </a>
-    {% endif %}
-
-    <!-- ── APPRAISAL (non-superuser, non-hr) ── -->
-    {% if not request.user.is_superuser %}
-    <div class="nav-section-label">Appraisal</div>
-
-    <a href="{% url 'appraisal:my_appraisals' %}"
-       class="nav-link-item {% if request.resolver_match.url_name == 'my_appraisals' %}active{% endif %}">
-        <i class="bi bi-file-earmark-text"></i> My Appraisals
-    </a>
-
-    {% if request.user.profile.role in 'reporting_officer,countersigning_officer,hr_admin,super_admin' %}
-    <a href="{% url 'appraisal:team_appraisals' %}"
-       class="nav-link-item {% if request.resolver_match.url_name == 'team_appraisals' %}active{% endif %}">
-        <i class="bi bi-people"></i> Team Appraisals
+    <a href="{% url 'core:documentation' %}"
+   class="nav-link-item {% if request.resolver_match.url_name == 'documentation' %}active{% endif %}">
+    <i class="bi bi-file-earmark-text"></i> System Guide
     </a>
     {% endif %}
 
-    <!-- ── PAYMENTS ── -->
-    <div class="nav-section-label">Payments</div>
+<!-- ── APPRAISAL (non-superuser) ── -->
+{% if not request.user.is_superuser %}
+<div class="nav-section-label">Appraisal</div>
 
-    <a href="{% url 'payments:my_payments' %}"
-       class="nav-link-item {% if request.resolver_match.url_name == 'my_payments' %}active{% endif %}">
-        <i class="bi bi-credit-card"></i> My Payments
-    </a>
+<a href="{% url 'appraisal:my_appraisals' %}"
+   class="nav-link-item {% if request.resolver_match.url_name == 'my_appraisals' %}active{% endif %}">
+    <i class="bi bi-file-earmark-text"></i>
+    My Appraisals
+    {% if nav_notification_count > 0 and request.user.profile.role == 'employee' %}
+    <span class="badge bg-danger ms-auto"
+          style="font-size:0.65rem;">
+        {{ nav_notification_count }}
+    </span>
+    {% endif %}
+</a>
 
-    {% if request.user.profile.role in 'hr_admin,super_admin' %}
-    <a href="{% url 'payments:all_payments' %}"
-       class="nav-link-item {% if request.resolver_match.url_name == 'all_payments' %}active{% endif %}">
-        <i class="bi bi-cash-stack"></i> All Payments
-    </a>
+{% if request.user.profile.role in 'reporting_officer,countersigning_officer,hr_admin,super_admin' %}
+<a href="{% url 'appraisal:team_appraisals' %}"
+   class="nav-link-item {% if request.resolver_match.url_name == 'team_appraisals' %}active{% endif %}">
+    <i class="bi bi-people"></i>
+    Team Appraisals
+    {% if nav_notification_count > 0 and request.user.profile.role in 'reporting_officer,countersigning_officer' %}
+    <span class="badge bg-danger ms-auto"
+          style="font-size:0.65rem;">
+        {{ nav_notification_count }}
+    </span>
     {% endif %}
+</a>
+{% endif %}
+
+<!-- ── PAYMENTS ── -->
+<div class="nav-section-label">Payments</div>
+
+<a href="{% url 'payments:my_payments' %}"
+   class="nav-link-item {% if request.resolver_match.url_name == 'my_payments' %}active{% endif %}">
+    <i class="bi bi-credit-card"></i>
+    My Payments
+    {% if nav_completed_appraisals > 0 %}
+    <span class="badge bg-success ms-auto"
+          style="font-size:0.65rem;">
+        {{ nav_completed_appraisals }} ready
+    </span>
     {% endif %}
+</a>
+
+{% if request.user.profile.role in 'hr_admin,super_admin' %}
+<a href="{% url 'payments:all_payments' %}"
+   class="nav-link-item {% if request.resolver_match.url_name == 'all_payments' %}active{% endif %}">
+    <i class="bi bi-cash-stack"></i> All Payments
+</a>
+{% endif %}
+{% endif %}
 
 </nav>
 </div>

@@ -133,10 +133,63 @@
 </div>
 
 <div class="mt-3">
+    <!-- Payment / Download Action -->
+{% if appraisal.status == 'completed' %}
+<div class="content-card mt-4"
+     style="background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            border: 2px solid #28a745;">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h6 class="fw-bold mb-1 text-success">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                Your Appraisal is Complete!
+            </h6>
+            <p class="text-muted mb-0" style="font-size:0.85rem;">
+                All four parts have been signed off.
+                Pay <strong>₦{{ appraisal.cycle.download_fee }}</strong>
+                to download your official evaluation report.
+            </p>
+        </div>
+        <a href="{% url 'payments:initiate' appraisal.pk %}"
+           class="btn btn-success btn-lg ms-4">
+            <i class="bi bi-download me-2"></i>
+            Pay & Download PDF
+            <div style="font-size:0.7rem; opacity:0.85;">
+                ₦{{ appraisal.cycle.download_fee }}
+            </div>
+        </a>
+    </div>
+</div>
+
+{% elif appraisal.status == 'closed' %}
+<div class="content-card mt-4"
+     style="border: 2px solid #1a3a5c;">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h6 class="fw-bold mb-1 text-primary">
+                <i class="bi bi-file-earmark-pdf-fill me-2"></i>
+                PDF Available
+            </h6>
+            <p class="text-muted mb-0" style="font-size:0.85rem;">
+                You have already paid for this appraisal.
+                You can re-download your PDF at any time.
+            </p>
+        </div>
+        <a href="{% url 'payments:download_pdf' appraisal.pk %}"
+           class="btn btn-primary btn-lg ms-4">
+            <i class="bi bi-download me-2"></i>
+            Download PDF
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<div class="mt-3">
     <a href="{% url 'core:dashboard' %}"
        class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
     </a>
+</div>
 </div>
 
 {% endblock %}

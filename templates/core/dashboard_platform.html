@@ -63,27 +63,32 @@
                 Quick Actions
             </h6>
             <div class="d-grid gap-2">
-                <a href="{% url 'organisations:organisation_create' %}"
-                   class="btn btn-primary">
-                    <i class="bi bi-plus-circle me-2"></i>
-                    Onboard New Organisation
-                </a>
-                <a href="{% url 'accounts:platform_user_list' %}"
-                   class="btn btn-outline-primary">
-                    <i class="bi bi-people me-2"></i>
-                    Manage All Users
-                </a>
-                <a href="{% url 'organisations:organisation_list' %}"
-                   class="btn btn-outline-secondary">
-                    <i class="bi bi-building me-2"></i>
-                    View All Organisations
-                </a>
-                <a href="{% url 'appraisal:appraisal_list_hr' %}"
-                   class="btn btn-outline-secondary">
-                    <i class="bi bi-file-earmark-text me-2"></i>
-                    View All Appraisals
-                </a>
-            </div>
+    <a href="{% url 'organisations:organisation_create' %}"
+       class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>
+        Onboard New Organisation
+    </a>
+    <a href="{% url 'accounts:platform_user_list' %}"
+       class="btn btn-outline-primary">
+        <i class="bi bi-people me-2"></i>
+        Manage All Users
+    </a>
+    <a href="{% url 'organisations:organisation_list' %}"
+       class="btn btn-outline-secondary">
+        <i class="bi bi-building me-2"></i>
+        View All Organisations
+    </a>
+    <a href="{% url 'appraisal:appraisal_list_hr' %}"
+       class="btn btn-outline-secondary">
+        <i class="bi bi-file-earmark-text me-2"></i>
+        View All Appraisals
+    </a>
+    <a href="{% url 'core:documentation' %}"
+       class="btn btn-outline-secondary">
+        <i class="bi bi-file-earmark-text me-2"></i>
+        Download System Documentation
+    </a>
+</div>
         </div>
     </div>
 

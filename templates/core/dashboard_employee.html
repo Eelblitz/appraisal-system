@@ -29,6 +29,141 @@
     </div>
 </div>
 
+<!-- ══ NOTIFICATIONS ════════════════════════════════════ -->
+{% for appraisal in my_appraisals %}
+
+    {% if appraisal.status == 'pending' %}
+    <!-- Notification: Employee needs to fill Part 1 -->
+    <div class="alert mb-3"
+         style="background:#fff3cd; border:1px solid #ffc107;
+                border-left:5px solid #ffc107; border-radius:8px;">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <i class="bi bi-exclamation-circle-fill text-warning me-2"></i>
+                <strong>Action Required — Part 1</strong>
+                <div class="text-muted mt-1" style="font-size:0.85rem;">
+                    Your appraisal for <strong>{{ appraisal.cycle.name }}</strong>
+                    is ready. Please fill in your personal records (Part 1)
+                    to begin the evaluation process.
+                </div>
+            </div>
+            <a href="{% url 'appraisal:part1_form' appraisal.pk %}"
+               class="btn btn-warning ms-3 text-nowrap">
+                <i class="bi bi-pencil-square me-1"></i>
+                Start Part 1
+            </a>
+        </div>
+    </div>
+
+    {% elif appraisal.status == 'part1_submitted' %}
+    <!-- Notification: Waiting for Reporting Officer -->
+    <div class="alert mb-3"
+         style="background:#e8f4fd; border:1px solid #4a9fd4;
+                border-left:5px solid #1a3a5c; border-radius:8px;">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <i class="bi bi-hourglass-split text-primary me-2"></i>
+                <strong>Awaiting Reporting Officer — {{ appraisal.cycle.name }}</strong>
+                <div class="text-muted mt-1" style="font-size:0.85rem;">
+                    You submitted Part 1 on
+                    {{ appraisal.part1_submitted_at|date:"d M Y" }}.
+                    Your Reporting Officer
+                    {% if appraisal.employee.profile.reporting_officer %}
+                        ({{ appraisal.employee.profile.reporting_officer.user.get_full_name }})
+                    {% endif %}
+                    is now filling Parts 2 and 3.
+                </div>
+            </div>
+            <span class="badge bg-primary ms-3">In Progress</span>
+        </div>
+    </div>
+
+    {% elif appraisal.status == 'part2_submitted' or appraisal.status == 'part3_submitted' %}
+    <!-- Notification: Assessment in progress -->
+    <div class="alert mb-3"
+         style="background:#e8f4fd; border:1px solid #4a9fd4;
+                border-left:5px solid #1a3a5c; border-radius:8px;">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <i class="bi bi-hourglass-split text-primary me-2"></i>
+                <strong>Assessment in Progress — {{ appraisal.cycle.name }}</strong>
+                <div class="text-muted mt-1" style="font-size:0.85rem;">
+                    Your Reporting Officer has completed their assessment.
+                    The Countersigning Officer
+                    {% if appraisal.employee.profile.countersigning_officer %}
+                        ({{ appraisal.employee.profile.countersigning_officer.user.get_full_name }})
+                    {% endif %}
+                    is now reviewing and signing off.
+                </div>
+            </div>
+            <span class="badge bg-info text-dark ms-3">
+                Countersigning
+            </span>
+        </div>
+    </div>
+
+    {% elif appraisal.status == 'completed' %}
+    <!-- 
+        CRITICAL NOTIFICATION: Appraisal complete, ready to download
+        This is the notification the employee was missing
+    -->
+    <div class="alert mb-3"
+         style="background:#d4edda; border:1px solid #28a745;
+                border-left:5px solid #28a745; border-radius:8px;
+                box-shadow: 0 4px 12px rgba(40,167,69,0.15);">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <i class="bi bi-check-circle-fill text-success me-2"
+                   style="font-size:1.1rem;"></i>
+                <strong style="font-size:1rem;">
+                    🎉 Your Appraisal is Complete!
+                </strong>
+                <div class="text-muted mt-1" style="font-size:0.85rem;">
+                    Your <strong>{{ appraisal.cycle.name }}</strong>
+                    appraisal has been fully signed off by all officers.
+                    Pay <strong>₦{{ appraisal.cycle.download_fee }}</strong>
+                    to download your official evaluation report PDF.
+                </div>
+            </div>
+            <a href="{% url 'payments:initiate' appraisal.pk %}"
+               class="btn btn-success ms-3 text-nowrap"
+               style="min-width:160px;">
+                <i class="bi bi-download me-1"></i>
+                Pay & Download PDF
+                <div style="font-size:0.7rem; opacity:0.85;">
+                    ₦{{ appraisal.cycle.download_fee }}
+                </div>
+            </a>
+        </div>
+    </div>
+
+    {% elif appraisal.status == 'closed' %}
+    <!-- Notification: Already paid, can re-download -->
+    <div class="alert mb-3"
+         style="background:#e8f4fd; border:1px solid #1a3a5c;
+                border-left:5px solid #1a3a5c; border-radius:8px;">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <i class="bi bi-file-earmark-pdf-fill text-primary me-2"></i>
+                <strong>{{ appraisal.cycle.name }} — PDF Available</strong>
+                <div class="text-muted mt-1" style="font-size:0.85rem;">
+                    Your appraisal report is ready.
+                    You can re-download it at any time.
+                </div>
+            </div>
+            <a href="{% url 'payments:download_pdf' appraisal.pk %}"
+               class="btn btn-primary ms-3 text-nowrap">
+                <i class="bi bi-download me-1"></i>
+                Download PDF
+            </a>
+        </div>
+    </div>
+
+    {% endif %}
+
+{% endfor %}
+
+
 <!-- Stats Row -->
 <div class="row g-3 mb-4">
     <div class="col-md-4">
@@ -44,7 +179,7 @@
         <div class="content-card text-center">
             <i class="bi bi-hourglass-split fs-2 text-warning"></i>
             <h3 class="mt-2 fw-bold text-warning">
-                {{ total_appraisals|add:"-"|add:completed_appraisals }}
+                {{ in_progress_count }}
             </h3>
             <p class="text-muted mb-0">In Progress</p>
         </div>
@@ -60,32 +195,8 @@
     </div>
 </div>
 
-<!-- Active Appraisal Call to Action -->
-{% if active_appraisal %}
-<div class="content-card mb-4"
-     style="border-left: 4px solid #ffc107;">
-    <div class="d-flex justify-content-between align-items-center">
-        <div>
-            <h6 class="fw-bold mb-1">
-                <i class="bi bi-exclamation-circle text-warning me-2"></i>
-                Action Required
-            </h6>
-            <p class="text-muted mb-0" style="font-size:0.85rem;">
-                You have a pending appraisal for
-                <strong>{{ active_appraisal.cycle.name }}</strong>.
-                Fill Part 1 to begin the evaluation process.
-            </p>
-        </div>
-        <a href="{% url 'appraisal:part1_form' active_appraisal.pk %}"
-           class="btn btn-warning ms-3">
-            <i class="bi bi-pencil-square me-1"></i>
-            Start Part 1
-        </a>
-    </div>
-</div>
-{% endif %}
 
-<!-- Appraisal History -->
+<!-- Appraisal History Table -->
 <div class="content-card">
     <h6 class="fw-bold mb-3">My Appraisal History</h6>
     {% if my_appraisals %}
@@ -106,8 +217,9 @@
                         {{ appraisal.cycle.name }}
                     </td>
                     <td class="text-muted" style="font-size:0.82rem;">
-                        {{ appraisal.cycle.period_from }}
-                        — {{ appraisal.cycle.period_to }}
+                        {{ appraisal.cycle.period_from|date:"d M Y" }}
+                        —
+                        {{ appraisal.cycle.period_to|date:"d M Y" }}
                     </td>
                     <td>
                         {% if appraisal.status == 'pending' %}
@@ -128,11 +240,11 @@
                             </span>
                         {% elif appraisal.status == 'completed' %}
                             <span class="badge bg-success">
-                                Completed
+                                ✓ Ready for Download
                             </span>
                         {% elif appraisal.status == 'closed' %}
                             <span class="badge bg-dark">
-                                Closed — Download Available
+                                Closed — PDF Available
                             </span>
                         {% endif %}
                     </td>
@@ -142,16 +254,22 @@
                                class="btn btn-sm btn-primary">
                                 Start Part 1
                             </a>
-                        {% elif appraisal.status == 'closed' %}
+                        {% elif appraisal.status == 'completed' %}
                             <a href="{% url 'payments:initiate' appraisal.pk %}"
                                class="btn btn-sm btn-success">
+                                <i class="bi bi-download me-1"></i>
+                                Pay & Download
+                            </a>
+                        {% elif appraisal.status == 'closed' %}
+                            <a href="{% url 'payments:download_pdf' appraisal.pk %}"
+                               class="btn btn-sm btn-primary">
                                 <i class="bi bi-download me-1"></i>
                                 Download PDF
                             </a>
                         {% else %}
                             <a href="{% url 'appraisal:detail' appraisal.pk %}"
                                class="btn btn-sm btn-outline-secondary">
-                                View
+                                View Details
                             </a>
                         {% endif %}
                     </td>

@@ -96,28 +96,37 @@
                 </div>
             </div>
 
-            <!-- Action Button -->
-            <div class="d-grid">
-                {% if appraisal.status == 'pending' %}
-                    <a href="{% url 'appraisal:part1_form' appraisal.pk %}"
-                       class="btn btn-primary">
-                        <i class="bi bi-pencil-square me-1"></i>
-                        Start Part 1
-                    </a>
-                {% elif appraisal.status == 'closed' %}
-                    <a href="{% url 'payments:initiate' appraisal.pk %}"
-                       class="btn btn-success">
-                        <i class="bi bi-download me-1"></i>
-                        Download PDF (₦{{ appraisal.cycle.download_fee }})
-                    </a>
-                {% else %}
-                    <a href="{% url 'appraisal:detail' appraisal.pk %}"
-                       class="btn btn-outline-primary">
-                        <i class="bi bi-eye me-1"></i>
-                        View Details
-                    </a>
-                {% endif %}
+<!-- Action Button -->
+<div class="d-grid">
+    {% if appraisal.status == 'pending' %}
+        <a href="{% url 'appraisal:part1_form' appraisal.pk %}"
+           class="btn btn-primary">
+            <i class="bi bi-pencil-square me-1"></i>
+            Start Part 1
+        </a>
+    {% elif appraisal.status == 'completed' %}
+        <a href="{% url 'payments:initiate' appraisal.pk %}"
+           class="btn btn-success">
+            <i class="bi bi-download me-1"></i>
+            Pay & Download PDF
+            <div style="font-size:0.72rem; opacity:0.85;">
+                ₦{{ appraisal.cycle.download_fee }}
             </div>
+        </a>
+    {% elif appraisal.status == 'closed' %}
+        <a href="{% url 'payments:download_pdf' appraisal.pk %}"
+           class="btn btn-primary">
+            <i class="bi bi-download me-1"></i>
+            Download PDF
+        </a>
+    {% else %}
+        <a href="{% url 'appraisal:detail' appraisal.pk %}"
+           class="btn btn-outline-primary">
+            <i class="bi bi-eye me-1"></i>
+            View Details
+        </a>
+    {% endif %}
+</div>
 
         </div>
     </div>

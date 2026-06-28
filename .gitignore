@@ -216,3 +216,27 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+# Environment
+.env
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Media files (uploaded by users)
+media/
+
+# Database
+*.sqlite3
+
+# VS Code
+.vscode/
+
+# Python
+*.egg-info/
+dist/
+build/
+
+# Static files collected for production
+staticfiles/
+static_root/
