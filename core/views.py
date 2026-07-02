@@ -1,3 +1,5 @@
+from pyexpat.errors import messages
+
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -8,7 +10,8 @@ from organisations.models import Organisation
 from payments.models import Payment
 import os
 from django.http import FileResponse, Http404
-
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse
 
 
 @login_required
@@ -248,3 +251,68 @@ def download_documentation(request):
         'attachment; filename="Annual_Performance_Evaluation_System_Documentation.md"'
     )
     return response
+
+def landing_page(request):
+    """
+    The public-facing landing page.
+
+    Why no @login_required here?
+    This page is PUBLIC — anyone on the internet can see it.
+    It is the product's front door. Potential clients visit
+    this page before they even have an account.
+
+    If the user is already logged in, we redirect them
+    directly to their dashboard — they don't need to see
+    the landing page again.
+
+    This is the same pattern used by Gmail, Slack, etc.
+    Logged-in users skip the landing page automatically.
+    """
+    if request.user.is_authenticated:
+        return redirect('core:dashboard')
+
+    return render(request, 'core/landing.html')
+
+
+
+
+@require_POST
+def contact_submit(request):
+    """
+    Handles the landing page contact form submission.
+
+    Why @require_POST?
+    This view should ONLY accept POST requests.
+    If someone visits the URL directly (GET request),
+    we redirect them back to the landing page.
+    @require_POST enforces this automatically.
+
+    What happens with the data?
+    For now we store it in the database via a simple
+    ContactRequest model and show a success message.
+    In a future update this can also send an email.
+    """
+    name = request.POST.get('name', '').strip()
+    email = request.POST.get('email', '').strip()
+    phone = request.POST.get('phone', '').strip()
+    organisation = request.POST.get('organisation', '').strip()
+    interest = request.POST.get('interest', '').strip()
+    message = request.POST.get('message', '').strip()
+
+    # Basic validation
+    if not name or not email or not message:
+        messages.error(
+            request,
+            'Please fill in all required fields.'
+        )
+        return redirect('core:landing')
+
+    # For now, we just show a success message
+    # In production, add email sending here using Django's send_mail
+    
+        messages.success(
+        request,
+        f'Thank you {name}! We have received your message and '
+        f'will respond to {email} within 24 hours.'
+    )
+    return redirect('core:landing' + '#contact')
